@@ -11,7 +11,7 @@ const CAR_PLACEHOLDER_IMAGES = {
   Pickup:      'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=1000&q=80',
 }
 
-export default function VehicleDetailsModal({ vehicle, onClose, onPurchase, onEdit, onDelete, onRestock, isAdmin, purchasing, onEnquire }) {
+export default function VehicleDetailsModal({ vehicle, onClose, onPurchase, onEdit, onDelete, onRestock, isAdmin, purchasing }) {
   if (!vehicle) return null
 
   const {
@@ -35,44 +35,47 @@ export default function VehicleDetailsModal({ vehicle, onClose, onPurchase, onEd
     m === 0 ? 'New' : `${new Intl.NumberFormat('en-US').format(m)} miles`
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-fade-in" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 bg-[#e6eef8]/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-fade-in"
+      onClick={onClose}
+    >
       <div
-        className="glass-card w-full max-w-4xl max-h-[90vh] overflow-y-auto animate-slide-up flex flex-col md:flex-row"
+        className="bg-[#e6eef8] w-full max-w-4xl max-h-[90vh] overflow-y-auto animate-slide-up flex flex-col md:flex-row rounded-3xl p-5 gap-5"
+        style={{ boxShadow: '12px 12px 24px #c2cbda, -12px -12px 24px #ffffff' }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Left Side: Images */}
-        <div className="md:w-1/2 p-6 flex flex-col gap-4 border-b md:border-b-0 md:border-r border-slate-700/50">
-          <div className="relative aspect-[16/10] w-full rounded-xl overflow-hidden bg-slate-900 border border-slate-700/30">
+        {/* Left: Images */}
+        <div className="md:w-1/2 flex flex-col gap-4">
+          <div className="relative aspect-[16/10] w-full rounded-2xl overflow-hidden bg-[#e6eef8] p-1.5 shadow-[inset_3px_3px_6px_#c2cbda,inset_-3px_-3px_6px_#ffffff]">
             <img
               src={photos[activeIdx]}
               alt={`${year} ${make} ${model}`}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover rounded-xl"
               onError={(e) => { e.target.src = CAR_PLACEHOLDER_IMAGES.Sedan }}
             />
             {isOutOfStock && (
-              <div className="absolute inset-0 bg-slate-900/60 flex items-center justify-center">
-                <span className="bg-red-500 text-white text-base font-bold px-5 py-2.5 rounded-full shadow-lg">
+              <div className="absolute inset-0 bg-[#e6eef8]/70 flex items-center justify-center">
+                <span className="bg-[#e6eef8] text-red-500 text-xs font-bold px-3 py-1.5 rounded-full shadow-[2px_2px_5px_#c2cbda,-2px_-2px_5px_#ffffff]">
                   Out of Stock
                 </span>
               </div>
             )}
 
-            {/* Slider arrows */}
             {photos.length > 1 && (
               <>
                 <button
                   onClick={() => setActiveIdx((prev) => (prev === 0 ? photos.length - 1 : prev - 1))}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-900/80 hover:bg-slate-950 text-white flex items-center justify-center shadow-lg transition-colors"
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[#e6eef8] text-[#51576c] flex items-center justify-center hover:bg-white transition-all shadow-[2px_2px_4px_#c2cbda,-2px_-2px_4px_#ffffff]"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
                 <button
                   onClick={() => setActiveIdx((prev) => (prev === photos.length - 1 ? 0 : prev + 1))}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-900/80 hover:bg-slate-950 text-white flex items-center justify-center shadow-lg transition-colors"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[#e6eef8] text-[#51576c] flex items-center justify-center hover:bg-white transition-all shadow-[2px_2px_4px_#c2cbda,-2px_-2px_4px_#ffffff]"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
@@ -80,21 +83,22 @@ export default function VehicleDetailsModal({ vehicle, onClose, onPurchase, onEd
             )}
           </div>
 
-          {/* Thumbnails grid */}
           {photos.length > 1 && (
             <div className="grid grid-cols-5 gap-2">
               {photos.map((url, idx) => (
                 <button
                   key={idx}
                   onClick={() => setActiveIdx(idx)}
-                  className={`aspect-square rounded-lg overflow-hidden border bg-slate-900 transition-all duration-200 ${
-                    idx === activeIdx ? 'border-indigo-500 ring-2 ring-indigo-500/20' : 'border-slate-700/50 hover:border-slate-500'
+                  className={`aspect-square rounded-xl overflow-hidden bg-[#e6eef8] p-1 transition-all duration-150 ${
+                    idx === activeIdx
+                      ? 'shadow-[inset_2px_2px_4px_#c2cbda,inset_-2px_-2px_4px_#ffffff] border border-[#0071e3]/30'
+                      : 'shadow-[2px_2px_4px_#c2cbda,-2px_-2px_4px_#ffffff]'
                   }`}
                 >
                   <img
                     src={url}
                     alt={`Thumbnail ${idx + 1}`}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover rounded-lg"
                     onError={(e) => { e.target.src = CAR_PLACEHOLDER_IMAGES.Sedan }}
                   />
                 </button>
@@ -103,128 +107,107 @@ export default function VehicleDetailsModal({ vehicle, onClose, onPurchase, onEd
           )}
         </div>
 
-        {/* Right Side: Information */}
-        <div className="md:w-1/2 p-6 flex flex-col justify-between gap-6 relative">
-          {/* Close button */}
+        {/* Right: Info */}
+        <div className="md:w-1/2 flex flex-col justify-between gap-5 relative p-2">
+          {/* Close */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-slate-400 hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-800"
+            className="absolute top-1 right-1 text-[#8e98aa] hover:text-[#1d1d1f] transition-all p-1.5 rounded-lg shadow-[2px_2px_4px_#c2cbda,-2px_-2px_4px_#ffffff] active:shadow-[inset_1.5px_1.5px_3px_#c2cbda,inset_-1.5px_-1.5px_3px_#ffffff]"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
 
           <div className="space-y-4">
-            {/* Header info */}
+            {/* Header */}
             <div>
               <div className="flex gap-2 items-center mb-2">
-                <span className="badge bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-semibold px-3 py-1">
+                <span className="badge text-[10px] font-bold text-[#51576c]">
                   {category}
                 </span>
                 {vehicle.is_on_sale && vehicle.sale_price && (
-                  <span className="badge bg-rose-600 text-white border-rose-500/30 text-xs font-bold px-3 py-1 flex items-center gap-1 uppercase tracking-wider animate-pulse">
-                    🏷️ Sale Offer
+                  <span className="badge text-[10px] font-extrabold text-red-500 uppercase tracking-wider">
+                    Sale
                   </span>
                 )}
               </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-white leading-tight">
+              <h2 className="text-xl font-extrabold text-[#1d1d1f] leading-tight">
                 {year} {make} {model}
               </h2>
-              <div className="flex items-baseline gap-3 mt-2 flex-wrap">
+              <div className="flex items-baseline gap-2 mt-2">
                 {vehicle.is_on_sale && vehicle.sale_price ? (
                   <>
-                    <span className="text-3xl font-bold text-gradient">{formatPrice(vehicle.sale_price)}</span>
-                    <span className="text-lg line-through text-slate-500 font-medium">{formatPrice(price)}</span>
+                    <span className="text-2xl font-extrabold text-[#0071e3]">{formatPrice(vehicle.sale_price)}</span>
+                    <span className="text-sm line-through text-[#8e98aa] font-semibold">{formatPrice(price)}</span>
                   </>
                 ) : (
-                  <span className="text-3xl font-bold text-gradient">{formatPrice(price)}</span>
+                  <span className="text-2xl font-extrabold text-[#1d1d1f]">{formatPrice(price)}</span>
                 )}
               </div>
             </div>
 
-            {/* Specifications grid */}
-            <div className="grid grid-cols-2 gap-3 bg-slate-900/40 rounded-xl p-4 border border-slate-800">
-              <div>
-                <p className="text-xs text-slate-400 font-medium">Mileage</p>
-                <p className="text-sm font-semibold text-slate-200">{formatMileage(mileage)}</p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-400 font-medium">Exterior Color</p>
-                <p className="text-sm font-semibold text-slate-200">{color || 'N/A'}</p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-400 font-medium">Available Inventory</p>
-                <p className={`text-sm font-semibold ${isOutOfStock ? 'text-red-400' : 'text-green-400'}`}>
-                  {isOutOfStock ? 'Out of stock' : `${quantity} unit(s) left`}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-400 font-medium">Listing ID</p>
-                <p className="text-sm font-semibold text-slate-500 font-mono">#{id}</p>
-              </div>
+            {/* Specs grid */}
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: 'Mileage', value: formatMileage(mileage) },
+                { label: 'Color', value: color || 'N/A' },
+                { label: 'Stock', value: isOutOfStock ? 'Out of stock' : `${quantity} units`, accent: isOutOfStock ? 'text-red-500' : 'text-emerald-600' },
+                { label: 'ID', value: `#${id}`, mono: true },
+              ].map(({ label, value, accent, mono }) => (
+                <div key={label} className="bg-[#e6eef8] rounded-xl p-3 shadow-[inset_2px_2px_4px_#c2cbda,inset_-2px_-2px_4px_#ffffff]">
+                  <p className="text-[10px] text-[#8e98aa] font-bold mb-0.5">{label}</p>
+                  <p className={`text-xs font-bold ${accent || 'text-[#1d1d1f]'} ${mono ? 'font-mono' : ''}`}>{value}</p>
+                </div>
+              ))}
             </div>
 
             {/* Description */}
-            <div>
-              <h4 className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1.5">Description</h4>
-              <p className="text-sm text-slate-300 leading-relaxed bg-slate-900/20 rounded-xl p-3 border border-slate-800/40">
-                {description || 'No description provided for this vehicle.'}
-              </p>
-            </div>
+            {description && (
+              <div>
+                <p className="text-[10px] text-[#8e98aa] font-bold uppercase tracking-wider mb-1.5">Description</p>
+                <p className="text-xs text-[#51576c] leading-relaxed bg-[#e6eef8] rounded-xl p-3 shadow-[inset_2px_2px_4px_#c2cbda,inset_-2px_-2px_4px_#ffffff] font-medium">
+                  {description}
+                </p>
+              </div>
+            )}
           </div>
 
-          {/* Action buttons */}
+          {/* Actions */}
           <div className="flex flex-col gap-3 mt-auto">
             {!isAdmin && (
               <button
-                onClick={() => {
-                  onPurchase(id)
-                  onClose()
-                }}
+                onClick={() => { onPurchase(id); onClose() }}
                 disabled={isOutOfStock || purchasing}
-                className="btn-primary w-full py-3.5 text-base flex items-center justify-center gap-2"
+                className={`w-full py-2.5 text-sm font-bold rounded-xl transition-all duration-150 ${
+                  isOutOfStock
+                    ? 'bg-transparent text-[#b0bacd] border border-[#d8e0ed] cursor-not-allowed shadow-none'
+                    : 'bg-[#e6eef8] text-[#0071e3] shadow-[4px_4px_8px_#c2cbda,-4px_-4px_8px_#ffffff] hover:shadow-[2px_2px_4px_#c2cbda,-2px_-2px_4px_#ffffff] active:shadow-[inset_2px_2px_4px_#c2cbda,inset_-2px_-2px_4px_#ffffff]'
+                }`}
               >
-                {purchasing ? (
-                  <span>Processing...</span>
-                ) : isOutOfStock ? (
-                  'Out of Stock'
-                ) : (
-                  <>
-                    <span>🛒 Purchase Vehicle</span>
-                  </>
-                )}
+                {purchasing ? 'Processing...' : isOutOfStock ? 'Unavailable' : 'Purchase Vehicle'}
               </button>
             )}
 
             {isAdmin && (
-              <div className="flex gap-3 mt-1">
+              <div className="flex gap-2.5">
                 <button
-                  onClick={() => {
-                    onEdit(vehicle)
-                    onClose()
-                  }}
-                  className="btn-secondary flex-1 py-2 text-xs"
+                  onClick={() => { onEdit(vehicle); onClose() }}
+                  className="flex-1 text-xs py-2 bg-[#e6eef8] text-[#1d1d1f] rounded-xl shadow-[3px_3px_6px_#c2cbda,-3px_-3px_6px_#ffffff] hover:shadow-[1px_1px_3px_#c2cbda,-1px_-1px_3px_#ffffff] active:shadow-[inset_2px_2px_4px_#c2cbda,inset_-2px_-2px_4px_#ffffff] transition-all duration-150 font-semibold"
                 >
-                  ✏️ Edit Details
+                  Edit
                 </button>
                 <button
-                  onClick={() => {
-                    onRestock(vehicle)
-                    onClose()
-                  }}
-                  className="btn-secondary flex-1 py-2 text-xs"
+                  onClick={() => { onRestock(vehicle); onClose() }}
+                  className="flex-1 text-xs py-2 bg-[#e6eef8] text-[#1d1d1f] rounded-xl shadow-[3px_3px_6px_#c2cbda,-3px_-3px_6px_#ffffff] hover:shadow-[1px_1px_3px_#c2cbda,-1px_-1px_3px_#ffffff] active:shadow-[inset_2px_2px_4px_#c2cbda,inset_-2px_-2px_4px_#ffffff] transition-all duration-150 font-semibold"
                 >
-                  📦 Restock Units
+                  Restock
                 </button>
                 <button
-                  onClick={() => {
-                    onDelete(id)
-                    onClose()
-                  }}
-                  className="btn-danger py-2 px-4 text-xs"
+                  onClick={() => { onDelete(id); onClose() }}
+                  className="text-xs py-2 px-4 bg-[#e6eef8] text-red-500 rounded-xl shadow-[3px_3px_6px_#c2cbda,-3px_-3px_6px_#ffffff] hover:shadow-[1px_1px_3px_#c2cbda,-1px_-1px_3px_#ffffff] active:shadow-[inset_2px_2px_4px_#c2cbda,inset_-2px_-2px_4px_#ffffff] transition-all duration-150 font-semibold"
                 >
-                  🗑️ Delete Listing
+                  Delete
                 </button>
               </div>
             )}

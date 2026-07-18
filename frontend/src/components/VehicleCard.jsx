@@ -1,14 +1,14 @@
 import { useState } from 'react'
 
 const CATEGORY_COLORS = {
-  Sedan:       'bg-blue-500/20 text-blue-300 border-blue-500/30',
-  SUV:         'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
-  Truck:       'bg-amber-500/20 text-amber-300 border-amber-500/30',
-  Coupe:       'bg-pink-500/20 text-pink-300 border-pink-500/30',
-  Van:         'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
-  Electric:    'bg-violet-500/20 text-violet-300 border-violet-500/30',
-  Convertible: 'bg-rose-500/20 text-rose-300 border-rose-500/30',
-  Pickup:      'bg-orange-500/20 text-orange-300 border-orange-500/30',
+  Sedan:       'text-sky-600 bg-[#e6eef8] border-sky-100 shadow-[inset_1px_1px_3px_#c2cbda,inset_-1px_-1px_3px_#ffffff]',
+  SUV:         'text-emerald-600 bg-[#e6eef8] border-emerald-100 shadow-[inset_1px_1px_3px_#c2cbda,inset_-1px_-1px_3px_#ffffff]',
+  Truck:       'text-amber-600 bg-[#e6eef8] border-amber-100 shadow-[inset_1px_1px_3px_#c2cbda,inset_-1px_-1px_3px_#ffffff]',
+  Coupe:       'text-pink-600 bg-[#e6eef8] border-pink-100 shadow-[inset_1px_1px_3px_#c2cbda,inset_-1px_-1px_3px_#ffffff]',
+  Van:         'text-cyan-600 bg-[#e6eef8] border-cyan-100 shadow-[inset_1px_1px_3px_#c2cbda,inset_-1px_-1px_3px_#ffffff]',
+  Electric:    'text-violet-600 bg-[#e6eef8] border-violet-100 shadow-[inset_1px_1px_3px_#c2cbda,inset_-1px_-1px_3px_#ffffff]',
+  Convertible: 'text-rose-600 bg-[#e6eef8] border-rose-100 shadow-[inset_1px_1px_3px_#c2cbda,inset_-1px_-1px_3px_#ffffff]',
+  Pickup:      'text-orange-600 bg-[#e6eef8] border-orange-100 shadow-[inset_1px_1px_3px_#c2cbda,inset_-1px_-1px_3px_#ffffff]',
 }
 
 const CAR_PLACEHOLDER_IMAGES = {
@@ -22,7 +22,7 @@ const CAR_PLACEHOLDER_IMAGES = {
   Pickup:      'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=600&q=80',
 }
 
-export default function VehicleCard({ vehicle, onPurchase, onEdit, onDelete, onRestock, onViewDetails, isAdmin, purchasing, onEnquire }) {
+export default function VehicleCard({ vehicle, onPurchase, onEdit, onDelete, onRestock, onViewDetails, isAdmin, purchasing }) {
   const {
     id, make, model, year, category, price, quantity,
     color, mileage, image_url, image_urls,
@@ -30,13 +30,12 @@ export default function VehicleCard({ vehicle, onPurchase, onEdit, onDelete, onR
 
   const [activeImgIdx, setActiveImgIdx] = useState(0)
 
-  const categoryColor = CATEGORY_COLORS[category] || 'bg-slate-500/20 text-slate-300 border-slate-500/30'
+  const categoryColor = CATEGORY_COLORS[category] || 'text-slate-600 bg-[#e6eef8] border-slate-100 shadow-[inset_1px_1px_3px_#c2cbda,inset_-1px_-1px_3px_#ffffff]'
   const photos = Array.isArray(image_urls) && image_urls.length > 0
     ? image_urls
-    : image_url
-    ? [image_url]
+    : image_url ? [image_url]
     : [CAR_PLACEHOLDER_IMAGES[category] || CAR_PLACEHOLDER_IMAGES.Sedan]
-  
+
   const imageUrl = photos[activeImgIdx] || CAR_PLACEHOLDER_IMAGES[category] || CAR_PLACEHOLDER_IMAGES.Sedan
   const isOutOfStock = quantity === 0
 
@@ -50,196 +49,141 @@ export default function VehicleCard({ vehicle, onPurchase, onEdit, onDelete, onR
     <div
       data-testid="vehicle-card"
       onClick={() => onViewDetails && onViewDetails(vehicle)}
-      className="glass-card overflow-hidden group hover:border-indigo-500/40 hover:shadow-glow
-                 transition-all duration-300 animate-slide-up flex flex-col cursor-pointer"
+      className="group relative bg-[#e6eef8] rounded-2xl overflow-hidden transition-all duration-300 animate-slide-up
+                 flex flex-col cursor-pointer p-3"
+      style={{ boxShadow: '6px 6px 12px #c2cbda, -6px -6px 12px #ffffff' }}
     >
-      {/* Image */}
-      <div className="relative h-48 overflow-hidden bg-slate-900">
+      {/* ── Image ── */}
+      <div className="relative h-40 overflow-hidden bg-[#e6eef8] rounded-xl flex-shrink-0"
+           style={{ boxShadow: 'inset 3px 3px 6px #c2cbda, inset -3px -3px 6px #ffffff' }}>
         <img
           src={imageUrl}
           alt={`${year} ${make} ${model}`}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700 ease-out p-1 rounded-2xl"
           onError={(e) => { e.target.src = CAR_PLACEHOLDER_IMAGES.Sedan }}
         />
 
-        {/* Carousel Navigation */}
+        {/* Carousel */}
         {photos.length > 1 && (
           <>
             <button
-              onClick={(e) => {
-                e.stopPropagation()
-                setActiveImgIdx((prev) => (prev === 0 ? photos.length - 1 : prev - 1))
-              }}
-              className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-900/60 backdrop-blur-md text-white flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-slate-900/80 transition-all duration-200"
+              onClick={(e) => { e.stopPropagation(); setActiveImgIdx((prev) => (prev === 0 ? photos.length - 1 : prev - 1)) }}
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-[#e6eef8] text-[#51576c] flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-white transition-all shadow-[2px_2px_4px_#c2cbda,-2px_-2px_4px_#ffffff]"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-              </svg>
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
             </button>
             <button
-              onClick={(e) => {
-                e.stopPropagation()
-                setActiveImgIdx((prev) => (prev === photos.length - 1 ? 0 : prev + 1))
-              }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-900/60 backdrop-blur-md text-white flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-slate-900/80 transition-all duration-200"
+              onClick={(e) => { e.stopPropagation(); setActiveImgIdx((prev) => (prev === photos.length - 1 ? 0 : prev + 1)) }}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-[#e6eef8] text-[#51576c] flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-white transition-all shadow-[2px_2px_4px_#c2cbda,-2px_-2px_4px_#ffffff]"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-              </svg>
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
             </button>
-
-            {/* Dots */}
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-10">
-              {photos.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setActiveImgIdx(idx)
-                  }}
-                  className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
-                    idx === activeImgIdx ? 'bg-indigo-500 w-3' : 'bg-white/50'
-                  }`}
-                />
-              ))}
-            </div>
           </>
         )}
-        {/* Overlay gradient */}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
 
-        {/* Out of stock badge */}
+        {/* Out of stock */}
         {isOutOfStock && (
-          <div className="absolute inset-0 bg-slate-900/60 flex items-center justify-center">
-            <span className="bg-red-500/90 text-white text-sm font-bold px-4 py-2 rounded-full">
+          <div className="absolute inset-0 bg-[#e6eef8]/75 flex items-center justify-center backdrop-blur-[1px]">
+            <span className="bg-[#e6eef8] text-red-500 text-[11px] font-bold px-3 py-1.5 rounded-full shadow-[2px_2px_5px_#c2cbda,-2px_-2px_5px_#ffffff]">
               Out of Stock
             </span>
           </div>
         )}
 
-        {/* Category & Sale badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-1.5 items-start">
-          <span className={`badge border ${categoryColor} text-xs font-semibold`}>
-            {category}
-          </span>
+        {/* Top badges */}
+        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5 items-start">
+          <span className={`badge border-0 text-[9px] font-bold ${categoryColor}`}>{category}</span>
           {vehicle.is_on_sale && vehicle.sale_price && (
-            <span className="badge bg-rose-600 text-white border-rose-500/30 text-[10px] font-bold px-2 py-0.5 shadow-md flex items-center gap-1 uppercase tracking-wider animate-pulse">
-              🏷️ Sale
+            <span className="badge bg-[#e6eef8] text-red-500 border-0 text-[8px] font-extrabold uppercase tracking-widest shadow-[inset_1.5px_1.5px_3px_#c2cbda,inset_-1.5px_-1.5px_3px_#ffffff]">
+              SALE
             </span>
           )}
         </div>
 
-        {/* Quantity badge */}
-        <div className="absolute top-3 right-3">
-          <span className={`badge border text-xs font-semibold ${
-            isOutOfStock
-              ? 'bg-red-500/20 text-red-300 border-red-500/30'
-              : quantity <= 2
-              ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-              : 'bg-green-500/20 text-green-300 border-green-500/30'
+        {/* Stock badge */}
+        <div className="absolute top-2.5 right-2.5">
+          <span className={`text-[8px] font-bold px-2 py-0.5 rounded-md border-0 bg-[#e6eef8] ${
+            isOutOfStock ? 'text-red-500 shadow-[inset_1px_1px_3px_#c2cbda,inset_-1px_-1px_3px_#ffffff]'
+            : quantity <= 2 ? 'text-amber-600 shadow-[inset_1px_1px_3px_#c2cbda,inset_-1px_-1px_3px_#ffffff]'
+            : 'text-emerald-600 shadow-[inset_1px_1px_3px_#c2cbda,inset_-1px_-1px_3px_#ffffff]'
           }`}>
-            {isOutOfStock ? '0 left' : `${quantity} left`}
+            {isOutOfStock ? 'Sold out' : `${quantity} left`}
           </span>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="p-5 flex flex-col flex-1 gap-4">
-        {/* Title */}
+      {/* ── Content ── */}
+      <div className="pt-3 px-1 flex flex-col flex-1 gap-3">
         <div>
-          <h3 className="text-lg font-bold text-white">
+          <h3 className="text-sm font-bold text-[#1d1d1f] leading-snug tracking-tight">
             {year} {make} {model}
           </h3>
-          <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
+          <div className="flex items-center gap-2.5 mt-1.5">
             {color && (
-              <span className="flex items-center gap-1">
-                <span className="w-2.5 h-2.5 rounded-full bg-slate-400 inline-block" />
+              <span className="text-[11px] text-[#51576c] flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#a1aabf] inline-block" />
                 {color}
               </span>
             )}
-            <span>{formatMileage(mileage)}</span>
+            <span className="text-[11px] text-[#8e98aa] font-medium">{formatMileage(mileage)}</span>
           </div>
         </div>
 
         {/* Price */}
-        <div className="flex items-baseline gap-2 flex-wrap">
+        <div className="flex items-baseline gap-2">
           {vehicle.is_on_sale && vehicle.sale_price ? (
             <>
-              <span className="text-2xl font-bold text-gradient">{formatPrice(vehicle.sale_price)}</span>
-              <span className="text-sm line-through text-slate-500 font-medium">{formatPrice(price)}</span>
+              <span className="text-lg font-extrabold text-[#0071e3]">{formatPrice(vehicle.sale_price)}</span>
+              <span className="text-xs line-through text-[#8e98aa] font-medium">{formatPrice(price)}</span>
             </>
           ) : (
-            <span className="text-2xl font-bold text-gradient">{formatPrice(price)}</span>
+            <span className="text-lg font-extrabold text-[#1d1d1f]">{formatPrice(price)}</span>
           )}
         </div>
 
         {/* Actions */}
-        <div className="flex flex-col gap-2 mt-auto">
+        <div className="flex gap-2 mt-auto pt-1">
           {!isAdmin && (
             <button
               id={`purchase-btn-${id}`}
               data-testid="purchase-btn"
-              onClick={(e) => {
-                e.stopPropagation()
-                onPurchase(id)
-              }}
+              onClick={(e) => { e.stopPropagation(); onPurchase(id) }}
               disabled={purchasing || isOutOfStock}
-              className={`w-full text-sm py-2.5 font-bold transition-all duration-200 ${
+              className={`flex-1 text-xs py-2.5 font-bold rounded-xl transition-all duration-150 ${
                 isOutOfStock
-                  ? 'bg-slate-800 text-slate-500 border border-slate-700/50 cursor-not-allowed'
-                  : 'btn-primary'
+                  ? 'bg-transparent text-[#b0bacd] border border-[#d8e0ed] cursor-not-allowed shadow-none'
+                  : 'bg-[#e6eef8] text-[#0071e3] shadow-[3px_3px_6px_#c2cbda,-3px_-3px_6px_#ffffff] hover:shadow-[1px_1px_3px_#c2cbda,-1px_-1px_3px_#ffffff] active:shadow-[inset_2px_2px_4px_#c2cbda,inset_-2px_-2px_4px_#ffffff]'
               }`}
             >
-              {purchasing ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                  </svg>
-                  Processing...
-                </span>
-              ) : isOutOfStock ? (
-                'Out of Stock'
-              ) : (
-                '🛒 Purchase'
-              )}
+              {purchasing ? 'Processing...' : isOutOfStock ? 'Unavailable' : 'Purchase'}
             </button>
           )}
 
           {isAdmin && (
-            <div className="flex gap-2">
+            <div className="flex gap-1.5 w-full">
               <button
                 id={`edit-btn-${id}`}
                 data-testid="edit-btn"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onEdit(vehicle)
-                }}
-                className="btn-secondary flex-1 text-xs py-2"
+                onClick={(e) => { e.stopPropagation(); onEdit(vehicle) }}
+                className="flex-1 text-[11px] py-2 font-semibold bg-[#e6eef8] text-[#1d1d1f] rounded-xl shadow-[2px_2px_4px_#c2cbda,-2px_-2px_4px_#ffffff] active:shadow-[inset_2.5px_2.5px_5px_#c2cbda,inset_-2.5px_-2.5px_5px_#ffffff] transition-all duration-150"
               >
-                ✏️ Edit
+                Edit
               </button>
               <button
                 id={`restock-btn-${id}`}
                 data-testid="restock-btn"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onRestock(vehicle)
-                }}
-                className="btn-secondary flex-1 text-xs py-2"
+                onClick={(e) => { e.stopPropagation(); onRestock(vehicle) }}
+                className="flex-1 text-[11px] py-2 font-semibold bg-[#e6eef8] text-[#1d1d1f] rounded-xl shadow-[2px_2px_4px_#c2cbda,-2px_-2px_4px_#ffffff] active:shadow-[inset_2.5px_2.5px_5px_#c2cbda,inset_-2.5px_-2.5px_5px_#ffffff] transition-all duration-150"
               >
-                📦 Restock
+                Restock
               </button>
               <button
                 id={`delete-btn-${id}`}
                 data-testid="delete-btn"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onDelete(id)
-                }}
-                className="btn-danger text-xs py-2 px-3"
+                onClick={(e) => { e.stopPropagation(); onDelete(id) }}
+                className="text-[11px] py-2 px-3 font-semibold bg-[#e6eef8] text-red-500 rounded-xl shadow-[2px_2px_4px_#c2cbda,-2px_-2px_4px_#ffffff] active:shadow-[inset_2.5px_2.5px_5px_#c2cbda,inset_-2.5px_-2.5px_5px_#ffffff] transition-all duration-150"
               >
-                🗑️
+                ✕
               </button>
             </div>
           )}

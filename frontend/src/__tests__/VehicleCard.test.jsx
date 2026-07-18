@@ -136,9 +136,9 @@ describe('VehicleCard', () => {
       expect(screen.getByText('10 left')).toBeInTheDocument()
     })
 
-    it('shows "0 left" when out of stock', () => {
+    it('shows "Sold out" when out of stock', () => {
       render(<VehicleCard {...defaultProps} vehicle={{ ...baseVehicle, quantity: 0 }} />)
-      expect(screen.getByText('0 left')).toBeInTheDocument()
+      expect(screen.getByText('Sold out')).toBeInTheDocument()
     })
   })
 })

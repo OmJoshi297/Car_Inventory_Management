@@ -37,20 +37,19 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center p-4"
-         style={{ background: 'radial-gradient(ellipse at top, #1e1b4b 0%, #090d1a 60%)' }}>
+    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center p-4 bg-[#e6eef8]">
       <div className="w-full max-w-md animate-slide-up">
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl
-                          bg-gradient-to-br from-indigo-500 to-violet-500 shadow-glow-lg mb-4">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                          bg-[#e6eef8] shadow-[5px_5px_10px_#c2cbda,-5px_-5px_10px_#ffffff] mb-4">
+            <svg className="w-8 h-8 text-[#0071e3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
                 d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-gradient">Welcome Back</h1>
-          <p className="text-slate-400 mt-2">Sign in to your AutoVault account</p>
+          <h1 className="text-3xl font-extrabold text-[#1d1d1f] tracking-tight">Welcome Back</h1>
+          <p className="text-[#8e98aa] mt-2 font-bold">Sign in to your AutoVault account</p>
         </div>
 
         {/* Card */}
@@ -63,7 +62,7 @@ export default function Login() {
             )}
 
             <div>
-              <label htmlFor="login-username" className="block text-sm font-medium text-slate-300 mb-2">Username</label>
+              <label htmlFor="login-username" className="block text-sm font-semibold text-[#1d1d1f] mb-2">Username</label>
               <input
                 id="login-username"
                 name="username"
@@ -78,7 +77,7 @@ export default function Login() {
             </div>
 
             <div>
-              <label htmlFor="login-password" className="block text-sm font-medium text-slate-300 mb-2">Password</label>
+              <label htmlFor="login-password" className="block text-sm font-semibold text-[#1d1d1f] mb-2">Password</label>
               <input
                 id="login-password"
                 name="password"
@@ -113,14 +112,14 @@ export default function Login() {
           </form>
 
           {/* Demo credentials */}
-          <div className="mt-5 p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-xl text-xs text-slate-400">
-            <p className="font-semibold text-indigo-400 mb-1">🔑 Demo credentials</p>
-            <p>Admin: <span className="text-slate-300">admin / admin123</span></p>
+          <div className="mt-5 p-3 bg-[#e6eef8] rounded-xl text-xs text-[#8e98aa] shadow-[inset_2px_2px_4px_#c2cbda,inset_-2px_-2px_4px_#ffffff]">
+            <p className="font-bold text-[#1d1d1f] mb-1">🔑 Demo credentials</p>
+            <p>Admin: <span className="text-[#1d1d1f] font-bold">admin / admin123</span></p>
           </div>
 
-          <p className="text-center text-slate-400 text-sm mt-6">
-            Don't have an account?{' '}
-            <Link to="/register" className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors">
+          <p className="text-center text-[#8e98aa] text-sm mt-6 font-bold flex items-center justify-center gap-1.5">
+            Don't have an account?
+            <Link to="/register" className="text-[#0071e3] hover:underline font-bold px-2 py-0.5 rounded-lg shadow-[2px_2px_4px_#c2cbda,-2px_-2px_4px_#ffffff] active:shadow-[inset_1.5px_1.5px_3px_#c2cbda,inset_-1.5px_-1.5px_3px_#ffffff]">
               Register here
             </Link>
           </p>

@@ -99,7 +99,7 @@ export default function VehicleForm({ vehicle, onSubmit, onClose, loading }) {
 
   const field = (name, label, props = {}) => (
     <div>
-      <label className="block text-xs text-slate-400 mb-1 font-medium">{label}</label>
+      <label className="block text-xs text-[#8e98aa] mb-1.5 font-bold uppercase tracking-wider">{label}</label>
       <input
         id={`vehicle-${name}`}
         name={name}
@@ -108,38 +108,39 @@ export default function VehicleForm({ vehicle, onSubmit, onClose, loading }) {
         className={`form-input text-sm ${errors[name] ? 'border-red-500/60' : ''}`}
         {...props}
       />
-      {errors[name] && <p className="text-red-400 text-xs mt-1">{errors[name]}</p>}
+      {errors[name] && <p className="text-red-500 text-xs mt-1.5 font-bold">{errors[name]}</p>}
     </div>
   )
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
-      <div className="glass-card w-full max-w-2xl max-h-[92vh] overflow-y-auto animate-slide-up">
+    <div className="fixed inset-0 z-50 bg-[#e6eef8]/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+      <div className="bg-[#e6eef8] w-full max-w-2xl max-h-[92vh] overflow-y-auto animate-slide-up rounded-3xl p-5"
+           style={{ boxShadow: '12px 12px 24px #c2cbda, -12px -12px 24px #ffffff' }}>
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-700/50 sticky top-0 bg-slate-800/90 backdrop-blur-sm z-10 rounded-t-2xl">
-          <h2 className="text-xl font-bold text-white">
+        <div className="flex items-center justify-between p-4 bg-[#e6eef8] rounded-2xl shadow-[2px_2px_4px_#c2cbda,-2px_-2px_4px_#ffffff] mb-5 border border-[#d8e0ed]/20">
+          <h2 className="text-lg font-extrabold text-[#1d1d1f]">
             {isEdit ? '✏️ Edit Vehicle' : '➕ Add New Vehicle'}
           </h2>
           <button
             id="close-modal-btn"
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-200 transition-colors p-1 rounded-lg hover:bg-slate-700"
+            className="text-[#8e98aa] hover:text-[#1d1d1f] p-1.5 rounded-lg shadow-[2px_2px_4px_#c2cbda,-2px_-2px_4px_#ffffff] active:shadow-[inset_1.5px_1.5px_3px_#c2cbda,inset_-1.5px_-1.5px_3px_#ffffff] transition-colors"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
           {field('make', 'Make *', { placeholder: 'e.g. Toyota' })}
           {field('model', 'Model *', { placeholder: 'e.g. Camry' })}
           {field('year', 'Year *', { type: 'number', min: 1900, max: 2030 })}
 
           {/* Category */}
           <div>
-            <label className="block text-xs text-slate-400 mb-1 font-medium">Category *</label>
+            <label className="block text-xs text-[#8e98aa] mb-1.5 font-bold uppercase tracking-wider">Category *</label>
             <select
               id="vehicle-category"
               name="category"
@@ -148,7 +149,7 @@ export default function VehicleForm({ vehicle, onSubmit, onClose, loading }) {
               className="form-input text-sm"
             >
               {CATEGORIES.map((c) => (
-                <option key={c} value={c} className="bg-slate-800">{c}</option>
+                <option key={c} value={c} className="bg-[#e6eef8] text-[#1d1d1f]">{c}</option>
               ))}
             </select>
           </div>
@@ -159,8 +160,8 @@ export default function VehicleForm({ vehicle, onSubmit, onClose, loading }) {
           {field('mileage', 'Mileage', { type: 'number', min: 0, placeholder: '0' })}
 
           {/* Sale Properties */}
-          <div className="flex items-center h-full pt-5">
-            <label className="flex items-center gap-2 cursor-pointer text-slate-300 font-medium">
+          <div className="flex items-center h-full pt-5 px-1">
+            <label className="flex items-center gap-2.5 cursor-pointer text-[#1d1d1f] font-bold text-xs">
               <input
                 id="vehicle-is_on_sale"
                 type="checkbox"
@@ -170,7 +171,7 @@ export default function VehicleForm({ vehicle, onSubmit, onClose, loading }) {
                   setForm((prev) => ({ ...prev, is_on_sale: e.target.checked }))
                   setErrors((prev) => ({ ...prev, sale_price: undefined }))
                 }}
-                className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-700 bg-slate-800"
+                className="w-4 h-4 rounded text-[#0071e3] focus:ring-[#0071e3]/30 border-[#c2cbda] bg-[#e6eef8] shadow-[inset_1.5px_1.5px_3px_#c2cbda,inset_-1.5px_-1.5px_3px_#ffffff]"
               />
               <span>🏷️ Mark as On Sale</span>
             </label>
@@ -183,25 +184,25 @@ export default function VehicleForm({ vehicle, onSubmit, onClose, loading }) {
           )}
 
           {/* Photos list */}
-          <div className="col-span-2 space-y-3">
+          <div className="col-span-2 space-y-3 mt-1.5">
             <div className="flex items-center justify-between">
-              <label className="block text-xs text-slate-400 font-medium">
+              <label className="block text-xs text-[#8e98aa] font-bold uppercase tracking-wider">
                 📸 Car Photo URLs
-                <span className="ml-1 text-slate-500">(the first photo is the main display photo)</span>
+                <span className="ml-1 text-[10px] text-[#8e98aa] font-normal font-sans tracking-normal lowercase">(first is main preview)</span>
               </label>
               <button
                 type="button"
                 onClick={addImageUrlField}
-                className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold transition-colors"
+                className="text-[11px] text-[#0071e3] font-bold px-2 py-0.5 rounded-lg shadow-[2px_2px_4px_#c2cbda,-2px_-2px_4px_#ffffff] active:shadow-[inset_1.5px_1.5px_3px_#c2cbda,inset_-1.5px_-1.5px_3px_#ffffff]"
               >
-                + Add Photo URL
+                + Add Photo
               </button>
             </div>
             
-            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+            <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
               {form.image_urls.map((url, idx) => (
                 <div key={idx} className="flex gap-2 items-center">
-                  <div className="text-xs text-slate-500 font-mono w-6">#{idx + 1}</div>
+                  <div className="text-xs text-[#8e98aa] font-mono font-bold w-6">#{idx + 1}</div>
                   <input
                     type="url"
                     value={url}
@@ -212,7 +213,7 @@ export default function VehicleForm({ vehicle, onSubmit, onClose, loading }) {
                   <button
                     type="button"
                     onClick={() => removeImageUrlField(idx)}
-                    className="p-2 text-slate-400 hover:text-red-400 rounded-lg hover:bg-slate-800 transition-colors"
+                    className="p-2 text-[#8e98aa] hover:text-red-500 rounded-lg shadow-[2px_2px_4px_#c2cbda,-2px_-2px_4px_#ffffff] active:shadow-[inset_1.5px_1.5px_3px_#c2cbda,inset_-1.5px_-1.5px_3px_#ffffff] transition-all duration-150"
                     title="Remove URL"
                   >
                     ✕
@@ -223,8 +224,8 @@ export default function VehicleForm({ vehicle, onSubmit, onClose, loading }) {
           </div>
 
           {/* Description */}
-          <div className="col-span-2">
-            <label className="block text-xs text-slate-400 mb-1 font-medium">Description</label>
+          <div className="col-span-2 mt-1">
+            <label className="block text-xs text-[#8e98aa] mb-1.5 font-bold uppercase tracking-wider">Description</label>
             <textarea
               id="vehicle-description"
               name="description"
@@ -237,7 +238,7 @@ export default function VehicleForm({ vehicle, onSubmit, onClose, loading }) {
           </div>
 
           {/* Actions */}
-          <div className="col-span-2 flex gap-3 pt-2">
+          <div className="col-span-2 flex gap-3 pt-4">
             <button type="button" onClick={onClose} className="btn-secondary flex-1">
               Cancel
             </button>

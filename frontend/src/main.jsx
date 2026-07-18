@@ -37,12 +37,13 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             position="top-right"
             toastOptions={{
               style: {
-                background: '#1e293b',
-                color: '#e2e8f0',
-                border: '1px solid rgba(99,102,241,0.3)',
+                background: '#0e1018',
+                color: '#c8cdd8',
+                border: '1px solid #1a1d28',
                 borderRadius: '12px',
+                fontSize: '13px',
               },
-              success: { iconTheme: { primary: '#6366f1', secondary: '#fff' } },
+              success: { iconTheme: { primary: '#3b82f6', secondary: '#fff' } },
               error:   { iconTheme: { primary: '#ef4444', secondary: '#fff' } },
             }}
           />
