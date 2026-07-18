@@ -46,6 +46,7 @@ export const vehiclesAPI = {
   create: (data) => client.post('/vehicles', data),
   update: (id, data) => client.put(`/vehicles/${id}`, data),
   delete: (id) => client.delete(`/vehicles/${id}`),
+  getTrends: () => client.get('/vehicles/trends'),
 }
 
 // ─── Inventory ────────────────────────────────────────────────────────────────
@@ -54,6 +55,13 @@ export const inventoryAPI = {
   purchase: (id, quantity = 1) => client.post(`/vehicles/${id}/purchase`, { quantity }),
   restock: (id, quantity) => client.post(`/vehicles/${id}/restock`, { quantity }),
   getPurchasesLogs: () => client.get('/vehicles/purchases/logs'),
+}
+
+// ─── Customers ────────────────────────────────────────────────────────────────
+
+export const customersAPI = {
+  list: () => client.get('/customers'),
+  delete: (id) => client.delete(`/customers/${id}`),
 }
 
 export default client

@@ -25,6 +25,12 @@ def purchase_vehicle(
     if not vehicle:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Vehicle not found")
 
+    if current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admins are not allowed to purchase vehicles",
+        )
+
     if vehicle.quantity <= 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

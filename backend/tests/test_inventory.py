@@ -88,6 +88,15 @@ class TestPurchaseVehicle:
         resp = client.post(f"/api/vehicles/{vehicle.id}/purchase", json={"quantity": 1}, headers=headers)
         assert resp.json()["new_quantity"] == 2
 
+    def test_admin_cannot_purchase(self, client, db):
+        """Admins are not allowed to purchase vehicles."""
+        create_user(db, username="admin_user", email="admin@example.com", is_admin=True)
+        vehicle = create_vehicle(db, quantity=5)
+        headers = auth_headers(client, username="admin_user", password="password123")
+        resp = client.post(f"/api/vehicles/{vehicle.id}/purchase", json={"quantity": 1}, headers=headers)
+        assert resp.status_code == 403
+        assert "Admins are not allowed to purchase vehicles" in resp.json()["detail"]
+
 
 class TestRestockVehicle:
     def test_admin_can_restock(self, client, db):
@@ -219,3 +228,53 @@ class TestPurchaseLogs:
         """Unauthenticated access to logs endpoint should return 401 or 403."""
         resp = client.get("/api/vehicles/purchases/logs")
         assert resp.status_code in (401, 403)
+
+
+class TestCustomerManagement:
+    def test_admin_can_list_customers(self, client, db):
+        """Admin should be able to get a list of non-admin customers."""
+        create_user(db, username="customer_a", email="customer_a@example.com", is_admin=False)
+        create_user(db, username="customer_b", email="customer_b@example.com", is_admin=False)
+        create_user(db, username="admin_user", email="admin@example.com", is_admin=True)
+
+        headers = auth_headers(client, username="admin_user", password="password123")
+        resp = client.get("/api/customers", headers=headers)
+        assert resp.status_code == 200
+        data = resp.json()
+        # Since auth_headers logs in with "testuser" if not specified, that user also gets created. 
+        # So we check that our created non-admin customers are in the returned list.
+        usernames = [user["username"] for user in data]
+        assert "customer_a" in usernames
+        assert "customer_b" in usernames
+        assert "admin_user" not in usernames
+
+    def test_non_admin_cannot_list_customers(self, client, db):
+        """Customers should not be allowed to list other customers."""
+        create_user(db, username="customer_a", email="customer_a@example.com", is_admin=False)
+        headers = auth_headers(client, username="customer_a", password="password123")
+        resp = client.get("/api/customers", headers=headers)
+        assert resp.status_code == 403
+
+    def test_admin_can_delete_customer(self, client, db):
+        """Admin should be able to delete a customer."""
+        customer = create_user(db, username="customer_a", email="customer_a@example.com", is_admin=False)
+        create_user(db, username="admin_user", email="admin@example.com", is_admin=True)
+
+        headers = auth_headers(client, username="admin_user", password="password123")
+        resp = client.delete(f"/api/customers/{customer.id}", headers=headers)
+        assert resp.status_code == 204
+
+        # Verify customer is deleted
+        resp_list = client.get("/api/customers", headers=headers)
+        usernames = [user["username"] for user in resp_list.json()]
+        assert "customer_a" not in usernames
+
+    def test_non_admin_cannot_delete_customer(self, client, db):
+        """Customer should not be allowed to delete another customer."""
+        customer_a = create_user(db, username="customer_a", email="customer_a@example.com", is_admin=False)
+        customer_b = create_user(db, username="customer_b", email="customer_b@example.com", is_admin=False)
+
+        headers = auth_headers(client, username="customer_a", password="password123")
+        resp = client.delete(f"/api/customers/{customer_b.id}", headers=headers)
+        assert resp.status_code == 403
+

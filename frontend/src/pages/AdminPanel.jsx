@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
-import { vehiclesAPI, inventoryAPI } from '../api/client'
+import { vehiclesAPI, inventoryAPI, customersAPI } from '../api/client'
 import VehicleForm from '../components/VehicleForm'
 
 export default function AdminPanel() {
@@ -16,6 +16,10 @@ export default function AdminPanel() {
   const [logs, setLogs] = useState([])
   const [logsLoading, setLogsLoading] = useState(false)
 
+  const [customers, setCustomers] = useState([])
+  const [customersLoading, setCustomersLoading] = useState(false)
+  const [deleteCustomerConfirm, setDeleteCustomerConfirm] = useState(null)
+
   const fetchLogs = async () => {
     setLogsLoading(true)
     try {
@@ -25,6 +29,18 @@ export default function AdminPanel() {
       toast.error('Failed to load purchase logs')
     } finally {
       setLogsLoading(false)
+    }
+  }
+
+  const fetchCustomers = async () => {
+    setCustomersLoading(true)
+    try {
+      const { data } = await customersAPI.list()
+      setCustomers(data)
+    } catch {
+      toast.error('Failed to load customer list')
+    } finally {
+      setCustomersLoading(false)
     }
   }
 
@@ -38,6 +54,8 @@ export default function AdminPanel() {
       fetchLogs()
     } else if (activeTab === 'inventory') {
       vehiclesAPI.list().then(({ data }) => setVehicles(data)).catch(() => {})
+    } else if (activeTab === 'customers') {
+      fetchCustomers()
     }
   }, [activeTab])
 
@@ -73,6 +91,19 @@ export default function AdminPanel() {
       toast.error(err.response?.data?.detail || 'Delete failed')
     } finally {
       setDeleteConfirm(null)
+    }
+  }
+
+  const handleDeleteCustomer = async () => {
+    if (!deleteCustomerConfirm) return
+    try {
+      await customersAPI.delete(deleteCustomerConfirm.id)
+      setCustomers((prev) => prev.filter((c) => c.id !== deleteCustomerConfirm.id))
+      toast.success('Customer account deleted successfully ✅')
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to delete customer account')
+    } finally {
+      setDeleteCustomerConfirm(null)
     }
   }
 
@@ -161,13 +192,27 @@ export default function AdminPanel() {
               <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500 rounded-full" />
             )}
           </button>
+          <button
+            id="tab-customers"
+            onClick={() => setActiveTab('customers')}
+            className={`pb-3 text-sm font-semibold transition-all relative flex items-center gap-2 ${
+              activeTab === 'customers'
+                ? 'text-indigo-400'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            👥 Customer Management
+            {activeTab === 'customers' && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500 rounded-full" />
+            )}
+          </button>
         </div>
       </div>
 
       {/* Table Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="glass-card overflow-hidden">
-          {activeTab === 'inventory' ? (
+          {activeTab === 'inventory' && (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -253,7 +298,9 @@ export default function AdminPanel() {
                 </tbody>
               </table>
             </div>
-          ) : (
+          )}
+
+          {activeTab === 'logs' && (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -318,6 +365,75 @@ export default function AdminPanel() {
               </table>
             </div>
           )}
+
+          {activeTab === 'customers' && (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-700/50">
+                    {['Customer ID', 'Username', 'Email Address', 'Registration Date', 'Role', 'Actions'].map((h) => (
+                      <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider font-bold">
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-700/30">
+                  {customersLoading ? (
+                    [...Array(5)].map((_, i) => (
+                      <tr key={i}>
+                        {[...Array(6)].map((__, j) => (
+                          <td key={j} className="px-4 py-3">
+                            <div className="h-4 bg-slate-700/50 rounded animate-pulse" />
+                          </td>
+                        ))}
+                      </tr>
+                    ))
+                  ) : customers.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-4 py-12 text-center text-slate-400">
+                        No customer accounts found.
+                      </td>
+                    </tr>
+                  ) : (
+                    customers.map((c) => (
+                      <tr key={c.id} className="hover:bg-slate-700/20 transition-colors">
+                        <td className="px-4 py-3 text-slate-500 font-mono">#{c.id}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-300 flex items-center justify-center text-xs font-bold">
+                              {c.username[0].toUpperCase()}
+                            </div>
+                            <span className="font-medium text-slate-200">{c.username}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-slate-300">
+                          {c.email}
+                        </td>
+                        <td className="px-4 py-3 text-slate-400">
+                          {new Date(c.created_at).toLocaleString()}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="badge bg-slate-500/10 text-slate-300 border border-slate-500/20 text-xs">
+                            Customer
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <button
+                            id={`admin-delete-customer-${c.id}`}
+                            onClick={() => setDeleteCustomerConfirm(c)}
+                            className="text-xs bg-red-500/20 hover:bg-red-500/30 text-red-400 px-2.5 py-1.5 rounded-lg transition-colors border border-red-500/30"
+                          >
+                            Delete Account
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
 
@@ -373,6 +489,30 @@ export default function AdminPanel() {
                 className="btn-danger flex-1 py-2 font-semibold"
               >
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Customer Confirmation Modal */}
+      {deleteCustomerConfirm && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="glass-card w-full max-w-sm p-6 animate-slide-up">
+            <h3 className="text-lg font-bold text-white mb-1">🗑️ Delete Customer Account</h3>
+            <p className="text-slate-400 text-sm mb-6">
+              Are you sure you want to permanently delete customer account <strong>{deleteCustomerConfirm.username}</strong> ({deleteCustomerConfirm.email})? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setDeleteCustomerConfirm(null)} className="btn-secondary flex-1">
+                Cancel
+              </button>
+              <button
+                id="admin-confirm-delete-customer"
+                onClick={handleDeleteCustomer}
+                className="btn-danger flex-1 py-2 font-semibold"
+              >
+                Delete Account
               </button>
             </div>
           </div>

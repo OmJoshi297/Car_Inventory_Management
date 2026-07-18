@@ -27,6 +27,10 @@ export default function Dashboard() {
   const [logs, setLogs] = useState([])
   const [logsLoading, setLogsLoading] = useState(false)
 
+  const [trends, setTrends] = useState({ most_selling: [], on_sale: [] })
+  const [trendsLoading, setTrendsLoading] = useState(true)
+  const [activeTrendTab, setActiveTrendTab] = useState('trending')
+
   const fetchLogs = useCallback(async () => {
     setLogsLoading(true)
     try {
@@ -60,7 +64,22 @@ export default function Dashboard() {
     }
   }, [])
 
-  useEffect(() => { fetchAll() }, [fetchAll])
+  const fetchTrends = useCallback(async () => {
+    setTrendsLoading(true)
+    try {
+      const { data } = await vehiclesAPI.getTrends()
+      setTrends(data)
+    } catch {
+      toast.error('Failed to load vehicle trends')
+    } finally {
+      setTrendsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchAll()
+    fetchTrends()
+  }, [fetchAll, fetchTrends])
 
   const handleSearch = useCallback(async (params) => {
     if (!Object.keys(params).length) { fetchAll(); return }
@@ -82,6 +101,10 @@ export default function Dashboard() {
       navigate('/login')
       return
     }
+    if (isAdmin) {
+      toast.error('Administrators are not allowed to purchase vehicles.')
+      return
+    }
     setPurchasing((p) => ({ ...p, [id]: true }))
     try {
       const { data } = await inventoryAPI.purchase(id)
@@ -90,6 +113,7 @@ export default function Dashboard() {
         prev.map((v) => v.id === id ? { ...v, quantity: data.new_quantity } : v)
       )
       fetchLogs()
+      fetchTrends()
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Purchase failed')
     } finally {
@@ -113,6 +137,7 @@ export default function Dashboard() {
       }
       setShowForm(false)
       setEditVehicle(null)
+      fetchTrends()
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Operation failed')
     } finally {
@@ -133,6 +158,7 @@ export default function Dashboard() {
       await vehiclesAPI.delete(deleteConfirm.id)
       setVehicles((prev) => prev.filter((v) => v.id !== deleteConfirm.id))
       toast.success('Vehicle deleted successfully')
+      fetchTrends()
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Delete failed')
     } finally {
@@ -149,6 +175,7 @@ export default function Dashboard() {
       )
       toast.success(data.message)
       setShowRestock(null)
+      fetchTrends()
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Restock failed')
     }
@@ -196,6 +223,110 @@ export default function Dashboard() {
 
       {/* Main content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        {/* Featured Trends and Deals Section */}
+        <div className="glass-card p-6 border border-slate-700/30">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-800 pb-4 mb-6 gap-4">
+            <div>
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                ✨ Featured Collections
+              </h3>
+              <p className="text-xs text-slate-400 mt-1">
+                Explore our best sellers and limited-time discounts
+              </p>
+            </div>
+            {/* Tab buttons */}
+            <div className="flex gap-2 bg-slate-900/50 p-1.5 rounded-xl border border-slate-800">
+              <button
+                onClick={() => setActiveTrendTab('trending')}
+                className={`px-4 py-2 rounded-lg text-xs font-semibold tracking-wide uppercase transition-all duration-200 ${
+                  activeTrendTab === 'trending'
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                🔥 Trending Now
+              </button>
+              <button
+                onClick={() => setActiveTrendTab('deals')}
+                className={`px-4 py-2 rounded-lg text-xs font-semibold tracking-wide uppercase transition-all duration-200 ${
+                  activeTrendTab === 'deals'
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                🏷️ Special Offers
+              </button>
+            </div>
+          </div>
+
+          {/* Tab Content */}
+          {trendsLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="glass-card h-72 animate-pulse">
+                  <div className="h-40 bg-slate-700/40 rounded-t-2xl" />
+                  <div className="p-4 space-y-2">
+                    <div className="h-4 bg-slate-700/40 rounded w-3/4" />
+                    <div className="h-3 bg-slate-700/40 rounded w-1/2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <>
+              {activeTrendTab === 'trending' ? (
+                trends.most_selling.length === 0 ? (
+                  <div className="text-center py-10 text-slate-400">
+                    <p className="text-4xl mb-2">🔥</p>
+                    <p className="font-semibold text-sm">No trending vehicles yet</p>
+                    <p className="text-xs mt-1">Purchased vehicles will start trending here!</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {trends.most_selling.map((v) => (
+                      <VehicleCard
+                        key={`trend-${v.id}`}
+                        vehicle={v}
+                        isAdmin={isAdmin}
+                        purchasing={purchasing[v.id]}
+                        onPurchase={handlePurchase}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        onRestock={setShowRestock}
+                        onViewDetails={(car) => setSelectedVehicle(car)}
+                      />
+                    ))}
+                  </div>
+                )
+              ) : (
+                trends.on_sale.length === 0 ? (
+                  <div className="text-center py-10 text-slate-400">
+                    <p className="text-4xl mb-2">🏷️</p>
+                    <p className="font-semibold text-sm">No special offers at the moment</p>
+                    <p className="text-xs mt-1">Check back later for exciting discounts!</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {trends.on_sale.map((v) => (
+                      <VehicleCard
+                        key={`deal-${v.id}`}
+                        vehicle={v}
+                        isAdmin={isAdmin}
+                        purchasing={purchasing[v.id]}
+                        onPurchase={handlePurchase}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        onRestock={setShowRestock}
+                        onViewDetails={(car) => setSelectedVehicle(car)}
+                      />
+                    ))}
+                  </div>
+                )
+              )}
+            </>
+          )}
+        </div>
+
         {/* Search + Add */}
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
@@ -209,7 +340,7 @@ export default function Dashboard() {
                   onClick={toggleDrawer}
                   className="btn-secondary text-sm py-2.5 px-4 flex items-center gap-2 border border-slate-700 hover:border-indigo-500"
                 >
-                  📜 Purchase History
+                  {isAdmin ? '📜 Purchase Logs' : '📜 Purchase History'}
                 </button>
               )}
               {isAdmin && (

@@ -6,6 +6,7 @@ const EMPTY_FORM = {
   make: '', model: '', year: new Date().getFullYear(),
   category: 'Sedan', price: '', quantity: 1,
   description: '', image_urls: [''], color: '', mileage: 0,
+  is_on_sale: false, sale_price: '',
 }
 
 export default function VehicleForm({ vehicle, onSubmit, onClose, loading }) {
@@ -15,6 +16,8 @@ export default function VehicleForm({ vehicle, onSubmit, onClose, loading }) {
     if (!v) return { ...EMPTY_FORM, image_urls: [''] }
     return {
       ...v,
+      is_on_sale: v.is_on_sale ?? false,
+      sale_price: v.sale_price ?? '',
       image_urls: Array.isArray(v.image_urls) && v.image_urls.length > 0 
         ? [...v.image_urls]
         : v.image_url ? [v.image_url] : [''],
@@ -36,6 +39,14 @@ export default function VehicleForm({ vehicle, onSubmit, onClose, loading }) {
     if (!form.year || form.year < 1900 || form.year > 2030) e.year = 'Year must be 1900–2030'
     if (!form.price || Number(form.price) <= 0) e.price = 'Price must be positive'
     if (form.quantity < 0) e.quantity = 'Quantity cannot be negative'
+    
+    if (form.is_on_sale) {
+      if (!form.sale_price || Number(form.sale_price) <= 0) {
+        e.sale_price = 'Sale price is required'
+      } else if (Number(form.sale_price) >= Number(form.price)) {
+        e.sale_price = 'Sale price must be less than original price'
+      }
+    }
     return e
   }
 
@@ -78,6 +89,8 @@ export default function VehicleForm({ vehicle, onSubmit, onClose, loading }) {
       mileage: Number(form.mileage || 0),
       image_urls: validUrls,
       image_url: validUrls[0] || null,
+      is_on_sale: !!form.is_on_sale,
+      sale_price: form.is_on_sale && form.sale_price ? Number(form.sale_price) : null,
     }
     if (!payload.description) delete payload.description
     if (!payload.color) delete payload.color
@@ -144,6 +157,30 @@ export default function VehicleForm({ vehicle, onSubmit, onClose, loading }) {
           {field('quantity', 'Quantity', { type: 'number', min: 0, placeholder: '1' })}
           {field('color', 'Color', { placeholder: 'e.g. Midnight Black' })}
           {field('mileage', 'Mileage', { type: 'number', min: 0, placeholder: '0' })}
+
+          {/* Sale Properties */}
+          <div className="flex items-center h-full pt-5">
+            <label className="flex items-center gap-2 cursor-pointer text-slate-300 font-medium">
+              <input
+                id="vehicle-is_on_sale"
+                type="checkbox"
+                name="is_on_sale"
+                checked={!!form.is_on_sale}
+                onChange={(e) => {
+                  setForm((prev) => ({ ...prev, is_on_sale: e.target.checked }))
+                  setErrors((prev) => ({ ...prev, sale_price: undefined }))
+                }}
+                className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-700 bg-slate-800"
+              />
+              <span>🏷️ Mark as On Sale</span>
+            </label>
+          </div>
+
+          {form.is_on_sale ? (
+            field('sale_price', 'Sale Price (USD) *', { type: 'number', min: 0.01, step: '0.01', placeholder: 'Discounted Price' })
+          ) : (
+            <div />
+          )}
 
           {/* Photos list */}
           <div className="col-span-2 space-y-3">

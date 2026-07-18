@@ -110,6 +110,11 @@ describe('VehicleCard', () => {
       expect(screen.getByTestId('restock-btn')).toBeInTheDocument()
     })
 
+    it('does NOT show purchase button for admin users', () => {
+      render(<VehicleCard {...defaultProps} isAdmin={true} />)
+      expect(screen.queryByTestId('purchase-btn')).not.toBeInTheDocument()
+    })
+
     it('calls onEdit with the vehicle when edit is clicked', () => {
       const onEdit = vi.fn()
       render(<VehicleCard {...defaultProps} isAdmin={true} onEdit={onEdit} />)

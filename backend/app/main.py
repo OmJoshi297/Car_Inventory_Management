@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.database import Base, SessionLocal, engine
 from app.auth import hash_password
 from app.models import User
-from app.routers import auth, inventory, vehicles
+from app.routers import auth, inventory, vehicles, customers
 
 from sqlalchemy import text
 
@@ -83,6 +83,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(vehicles.router)
 app.include_router(inventory.router)
+app.include_router(customers.router)
 
 
 @app.get("/", tags=["Health"])

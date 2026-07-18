@@ -117,11 +117,16 @@ export default function VehicleCard({ vehicle, onPurchase, onEdit, onDelete, onR
           </div>
         )}
 
-        {/* Category badge */}
-        <div className="absolute top-3 left-3">
+        {/* Category & Sale badges */}
+        <div className="absolute top-3 left-3 flex flex-col gap-1.5 items-start">
           <span className={`badge border ${categoryColor} text-xs font-semibold`}>
             {category}
           </span>
+          {vehicle.is_on_sale && vehicle.sale_price && (
+            <span className="badge bg-rose-600 text-white border-rose-500/30 text-[10px] font-bold px-2 py-0.5 shadow-md flex items-center gap-1 uppercase tracking-wider animate-pulse">
+              🏷️ Sale
+            </span>
+          )}
         </div>
 
         {/* Quantity badge */}
@@ -157,36 +162,45 @@ export default function VehicleCard({ vehicle, onPurchase, onEdit, onDelete, onR
         </div>
 
         {/* Price */}
-        <div className="flex items-baseline gap-1">
-          <span className="text-2xl font-bold text-gradient">{formatPrice(price)}</span>
+        <div className="flex items-baseline gap-2 flex-wrap">
+          {vehicle.is_on_sale && vehicle.sale_price ? (
+            <>
+              <span className="text-2xl font-bold text-gradient">{formatPrice(vehicle.sale_price)}</span>
+              <span className="text-sm line-through text-slate-500 font-medium">{formatPrice(price)}</span>
+            </>
+          ) : (
+            <span className="text-2xl font-bold text-gradient">{formatPrice(price)}</span>
+          )}
         </div>
 
         {/* Actions */}
         <div className="flex flex-col gap-2 mt-auto">
-          <button
-            id={`purchase-btn-${id}`}
-            data-testid="purchase-btn"
-            disabled={isOutOfStock || purchasing}
-            onClick={(e) => {
-              e.stopPropagation()
-              onPurchase(id)
-            }}
-            className="btn-primary w-full text-sm py-2.5"
-          >
-            {purchasing ? (
-              <span className="flex items-center justify-center gap-2">
-                <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                </svg>
-                Processing...
-              </span>
-            ) : isOutOfStock ? (
-              'Out of Stock'
-            ) : (
-              '🛒 Purchase'
-            )}
-          </button>
+          {!isAdmin && (
+            <button
+              id={`purchase-btn-${id}`}
+              data-testid="purchase-btn"
+              disabled={isOutOfStock || purchasing}
+              onClick={(e) => {
+                e.stopPropagation()
+                onPurchase(id)
+              }}
+              className="btn-primary w-full text-sm py-2.5"
+            >
+              {purchasing ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                  </svg>
+                  Processing...
+                </span>
+              ) : isOutOfStock ? (
+                'Out of Stock'
+              ) : (
+                '🛒 Purchase'
+              )}
+            </button>
+          )}
 
           {isAdmin && (
             <div className="flex gap-2">

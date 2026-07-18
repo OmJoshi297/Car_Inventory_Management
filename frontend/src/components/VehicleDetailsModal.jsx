@@ -118,13 +118,29 @@ export default function VehicleDetailsModal({ vehicle, onClose, onPurchase, onEd
           <div className="space-y-4">
             {/* Header info */}
             <div>
-              <span className="badge bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-semibold px-3 py-1 mb-2">
-                {category}
-              </span>
+              <div className="flex gap-2 items-center mb-2">
+                <span className="badge bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-semibold px-3 py-1">
+                  {category}
+                </span>
+                {vehicle.is_on_sale && vehicle.sale_price && (
+                  <span className="badge bg-rose-600 text-white border-rose-500/30 text-xs font-bold px-3 py-1 flex items-center gap-1 uppercase tracking-wider animate-pulse">
+                    🏷️ Sale Offer
+                  </span>
+                )}
+              </div>
               <h2 className="text-2xl sm:text-3xl font-extrabold text-white leading-tight">
                 {year} {make} {model}
               </h2>
-              <p className="text-3xl font-bold text-gradient mt-2">{formatPrice(price)}</p>
+              <div className="flex items-baseline gap-3 mt-2 flex-wrap">
+                {vehicle.is_on_sale && vehicle.sale_price ? (
+                  <>
+                    <span className="text-3xl font-bold text-gradient">{formatPrice(vehicle.sale_price)}</span>
+                    <span className="text-lg line-through text-slate-500 font-medium">{formatPrice(price)}</span>
+                  </>
+                ) : (
+                  <span className="text-3xl font-bold text-gradient">{formatPrice(price)}</span>
+                )}
+              </div>
             </div>
 
             {/* Specifications grid */}
@@ -160,24 +176,26 @@ export default function VehicleDetailsModal({ vehicle, onClose, onPurchase, onEd
 
           {/* Action buttons */}
           <div className="flex flex-col gap-3 mt-auto">
-            <button
-              onClick={() => {
-                onPurchase(id)
-                onClose()
-              }}
-              disabled={isOutOfStock || purchasing}
-              className="btn-primary w-full py-3.5 text-base flex items-center justify-center gap-2"
-            >
-              {purchasing ? (
-                <span>Processing...</span>
-              ) : isOutOfStock ? (
-                'Out of Stock'
-              ) : (
-                <>
-                  <span>🛒 Purchase Vehicle</span>
-                </>
-              )}
-            </button>
+            {!isAdmin && (
+              <button
+                onClick={() => {
+                  onPurchase(id)
+                  onClose()
+                }}
+                disabled={isOutOfStock || purchasing}
+                className="btn-primary w-full py-3.5 text-base flex items-center justify-center gap-2"
+              >
+                {purchasing ? (
+                  <span>Processing...</span>
+                ) : isOutOfStock ? (
+                  'Out of Stock'
+                ) : (
+                  <>
+                    <span>🛒 Purchase Vehicle</span>
+                  </>
+                )}
+              </button>
+            )}
 
             {isAdmin && (
               <div className="flex gap-3 mt-1">
