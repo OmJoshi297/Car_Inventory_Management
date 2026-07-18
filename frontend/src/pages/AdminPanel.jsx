@@ -304,7 +304,7 @@ export default function AdminPanel() {
                           </span>
                         </td>
                         <td className="px-4 py-3.5 font-bold text-[#1d1d1f]">
-                          ${v.price.toLocaleString()}
+                          ₹{v.price.toLocaleString('en-IN')}
                         </td>
                         <td className="px-4 py-3.5">
                           <span className={`font-extrabold ${
@@ -400,7 +400,7 @@ export default function AdminPanel() {
                           {log.quantity}
                         </td>
                         <td className="px-4 py-3.5 font-extrabold text-emerald-600">
-                          ${log.total_price.toLocaleString()}
+                          ₹{log.total_price.toLocaleString('en-IN')}
                         </td>
                         <td className="px-4 py-3.5">
                           <span className="badge text-emerald-600 font-bold">

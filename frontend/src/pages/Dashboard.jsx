@@ -542,7 +542,7 @@ export default function Dashboard() {
                           <p className="text-xs font-bold text-[#1d1d1f]">{log.vehicle_make} {log.vehicle_model}</p>
                           <p className="text-[11px] text-[#8e98aa] mt-0.5 font-semibold">Qty: {log.quantity}</p>
                         </div>
-                        <span className="text-xs font-extrabold text-[#0071e3]">${log.total_price.toLocaleString()}</span>
+                        <span className="text-xs font-extrabold text-[#0071e3]">₹{log.total_price.toLocaleString('en-IN')}</span>
                       </div>
                       <div className="flex justify-between items-center mt-2.5 pt-2.5 border-t border-[#d8e0ed]">
                         <span className="text-[10px] text-[#8e98aa] font-medium">{new Date(log.created_at).toLocaleDateString()}</span>

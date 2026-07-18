@@ -40,7 +40,7 @@ export default function VehicleCard({ vehicle, onPurchase, onEdit, onDelete, onR
   const isOutOfStock = quantity === 0
 
   const formatPrice = (p) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(p)
+    new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(p)
 
   const formatMileage = (m) =>
     m === 0 ? 'New' : `${new Intl.NumberFormat('en-US').format(m)} mi`

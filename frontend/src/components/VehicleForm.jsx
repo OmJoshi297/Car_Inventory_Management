@@ -154,7 +154,7 @@ export default function VehicleForm({ vehicle, onSubmit, onClose, loading }) {
             </select>
           </div>
 
-          {field('price', 'Price (USD) *', { type: 'number', min: 0.01, step: '0.01', placeholder: '25000' })}
+          {field('price', 'Price (INR) *', { type: 'number', min: 0.01, step: '0.01', placeholder: '25000' })}
           {field('quantity', 'Quantity', { type: 'number', min: 0, placeholder: '1' })}
           {field('color', 'Color', { placeholder: 'e.g. Midnight Black' })}
           {field('mileage', 'Mileage', { type: 'number', min: 0, placeholder: '0' })}
@@ -178,7 +178,7 @@ export default function VehicleForm({ vehicle, onSubmit, onClose, loading }) {
           </div>
 
           {form.is_on_sale ? (
-            field('sale_price', 'Sale Price (USD) *', { type: 'number', min: 0.01, step: '0.01', placeholder: 'Discounted Price' })
+            field('sale_price', 'Sale Price (INR) *', { type: 'number', min: 0.01, step: '0.01', placeholder: 'Discounted Price' })
           ) : (
             <div />
           )}
