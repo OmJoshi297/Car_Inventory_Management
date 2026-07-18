@@ -48,3 +48,28 @@ class ActivityLog(Base):
     quantity = Column(Integer, nullable=False)
     total_price = Column(Float, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class Enquiry(Base):
+    __tablename__ = "enquiries"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    vehicle_id = Column(Integer, ForeignKey("vehicles.id", ondelete="SET NULL"), nullable=True)
+    vehicle_make = Column(String(50), nullable=True)
+    vehicle_model = Column(String(50), nullable=True)
+    name = Column(String(100), nullable=False)
+    email = Column(String(100), nullable=False)
+    message = Column(Text, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class EnquiryMessage(Base):
+    __tablename__ = "enquiry_messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    enquiry_id = Column(Integer, ForeignKey("enquiries.id", ondelete="CASCADE"), nullable=False, index=True)
+    sender_name = Column(String(100), nullable=False)
+    message = Column(Text, nullable=False)
+    is_from_admin = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())

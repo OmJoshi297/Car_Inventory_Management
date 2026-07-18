@@ -1,15 +1,16 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { vehiclesAPI, inventoryAPI } from '../api/client'
+import { vehiclesAPI, inventoryAPI, enquiriesAPI } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import VehicleCard from '../components/VehicleCard'
 import SearchBar from '../components/SearchBar'
 import VehicleForm from '../components/VehicleForm'
 import VehicleDetailsModal from '../components/VehicleDetailsModal'
+import EnquiryModal from '../components/EnquiryModal'
 
 export default function Dashboard() {
-  const { isAuthenticated, isAdmin } = useAuth()
+  const { isAuthenticated, isAdmin, user } = useAuth()
   const navigate = useNavigate()
   const [vehicles, setVehicles] = useState([])
   const [loading, setLoading] = useState(true)
@@ -18,14 +19,18 @@ export default function Dashboard() {
   const [showForm, setShowForm] = useState(false)
   const [formLoading, setFormLoading] = useState(false)
   const [purchasing, setPurchasing] = useState({})
+  const [showSupportChat, setShowSupportChat] = useState(false)
   const [showRestock, setShowRestock] = useState(null)
   const [restockQty, setRestockQty] = useState(5)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [selectedVehicle, setSelectedVehicle] = useState(null)
 
   const [showDrawer, setShowDrawer] = useState(false)
+  const [drawerTab, setDrawerTab] = useState('acquisitions')
   const [logs, setLogs] = useState([])
   const [logsLoading, setLogsLoading] = useState(false)
+  const [myEnquiries, setMyEnquiries] = useState([])
+  const [myEnquiriesLoading, setMyEnquiriesLoading] = useState(false)
 
   const [trends, setTrends] = useState({ most_selling: [], on_sale: [] })
   const [trendsLoading, setTrendsLoading] = useState(true)
@@ -43,11 +48,29 @@ export default function Dashboard() {
     }
   }, [])
 
+  const fetchMyEnquiries = useCallback(async () => {
+    if (!isAuthenticated) return
+    setMyEnquiriesLoading(true)
+    try {
+      const { data } = await enquiriesAPI.listMy()
+      setMyEnquiries(data)
+    } catch {
+      toast.error('Failed to load your enquiries')
+    } finally {
+      setMyEnquiriesLoading(false)
+    }
+  }, [isAuthenticated])
+
   const toggleDrawer = () => {
     const nextState = !showDrawer
     setShowDrawer(nextState)
     if (nextState) {
-      fetchLogs()
+      if (isAdmin) {
+        fetchLogs()
+      } else {
+        fetchLogs()
+        fetchMyEnquiries()
+      }
     }
   }
 
@@ -118,6 +141,19 @@ export default function Dashboard() {
       toast.error(err.response?.data?.detail || 'Purchase failed')
     } finally {
       setPurchasing((p) => ({ ...p, [id]: false }))
+    }
+  }
+
+  const handleEnquirySubmit = async (payload) => {
+    setEnquiryLoading(true)
+    try {
+      await enquiriesAPI.create(payload)
+      toast.success('Enquiry submitted successfully! We will get back to you soon. ✅')
+      setEnquiryVehicle(null)
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to submit enquiry')
+    } finally {
+      setEnquiryLoading(false)
     }
   }
 
@@ -473,7 +509,18 @@ export default function Dashboard() {
         />
       )}
 
-      {/* Sliding Drawer for Purchase History */}
+      {/* Vehicle Support Chat Modal */}
+      {showSupportChat && (
+        <EnquiryModal
+          user={user}
+          onClose={() => {
+            setShowSupportChat(false)
+            fetchMyEnquiries()
+          }}
+        />
+      )}
+
+      {/* Sliding Drawer for Purchase History & Enquiries */}
       {showDrawer && (
         <div className="fixed inset-0 z-50 overflow-hidden flex justify-end">
           {/* Backdrop */}
@@ -487,10 +534,10 @@ export default function Dashboard() {
             <div className="p-6 border-b border-slate-800 flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                  📜 Purchase History
+                  {isAdmin ? '📜 Purchase Logs' : '📜 Activity Center'}
                 </h3>
                 <p className="text-xs text-slate-400 mt-1">
-                  {isAdmin ? 'System-wide logs (Admin view)' : 'Your recent vehicle acquisitions'}
+                  {isAdmin ? 'System-wide logs (Admin view)' : 'Your recent dealer updates'}
                 </p>
               </div>
               <button
@@ -503,58 +550,153 @@ export default function Dashboard() {
               </button>
             </div>
 
+            {!isAdmin && (
+              <div className="flex border-b border-slate-800/80 px-6 py-2 gap-4 bg-slate-950/20">
+                <button
+                  onClick={() => setDrawerTab('acquisitions')}
+                  className={`pb-2.5 text-xs font-semibold relative transition-all ${
+                    drawerTab === 'acquisitions' ? 'text-indigo-400 font-bold' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  📜 Acquisitions
+                  {drawerTab === 'acquisitions' && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500 rounded-full" />
+                  )}
+                </button>
+                <button
+                  onClick={() => setDrawerTab('enquiries')}
+                  className={`pb-2.5 text-xs font-semibold relative transition-all ${
+                    drawerTab === 'enquiries' ? 'text-indigo-400' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  ✉️ My Enquiries ({myEnquiries.length})
+                  {drawerTab === 'enquiries' && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500 rounded-full" />
+                  )}
+                </button>
+              </div>
+            )}
+
             {/* List */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              {logsLoading ? (
-                [...Array(3)].map((_, i) => (
-                  <div key={i} className="flex gap-4 animate-pulse">
-                    <div className="w-8 h-8 rounded-full bg-slate-800" />
-                    <div className="flex-1 space-y-2 py-1">
-                      <div className="h-4 bg-slate-800 rounded w-3/4" />
-                      <div className="h-3 bg-slate-800 rounded w-1/2" />
-                    </div>
-                  </div>
-                ))
-              ) : logs.length === 0 ? (
-                <div className="text-center py-20 text-slate-400">
-                  <p className="text-5xl mb-4">🛒</p>
-                  <p className="font-semibold text-slate-300">No purchases found</p>
-                  <p className="text-xs mt-1">Acquired vehicles will show up here.</p>
-                </div>
-              ) : (
-                <div className="relative border-l border-slate-800 pl-4 space-y-6">
-                  {logs.map((log) => (
-                    <div key={log.id} className="relative">
-                      {/* Timeline dot */}
-                      <span className="absolute -left-[24px] top-1.5 w-3.5 h-3.5 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 border-2 border-slate-900 shadow-glow" />
-                      
-                      <div className="glass-card p-4 hover:border-indigo-500/40 transition-all duration-200">
-                        <div className="flex justify-between items-start gap-2 mb-1">
-                          <h4 className="font-semibold text-sm text-slate-200">
-                            {log.vehicle_make} {log.vehicle_model}
-                          </h4>
-                          <span className="text-xs text-indigo-400 font-bold">
-                            ${log.total_price.toLocaleString()}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center text-xs text-slate-400 mt-2">
-                          <span>Qty: {log.quantity}</span>
-                          <span>{new Date(log.created_at).toLocaleDateString()}</span>
-                        </div>
-                        {isAdmin && (
-                          <div className="mt-2 pt-2 border-t border-slate-800/50 flex justify-between items-center text-[10px] text-slate-500 font-medium">
-                            <span>User: {log.username}</span>
-                            <span className="text-indigo-500/80 bg-indigo-500/10 px-1.5 py-0.5 rounded">Admin View</span>
-                          </div>
-                        )}
+              {isAdmin || drawerTab === 'acquisitions' ? (
+                logsLoading ? (
+                  [...Array(3)].map((_, i) => (
+                    <div key={i} className="flex gap-4 animate-pulse">
+                      <div className="w-8 h-8 rounded-full bg-slate-800" />
+                      <div className="flex-1 space-y-2 py-1">
+                        <div className="h-4 bg-slate-800 rounded w-3/4" />
+                        <div className="h-3 bg-slate-800 rounded w-1/2" />
                       </div>
                     </div>
-                  ))}
-                </div>
+                  ))
+                ) : logs.length === 0 ? (
+                  <div className="text-center py-20 text-slate-400">
+                    <p className="text-5xl mb-4">🛒</p>
+                    <p className="font-semibold text-slate-300">No purchases found</p>
+                    <p className="text-xs mt-1">Acquired vehicles will show up here.</p>
+                  </div>
+                ) : (
+                  <div className="relative border-l border-slate-800 pl-4 space-y-6">
+                    {logs.map((log) => (
+                      <div key={log.id} className="relative">
+                        {/* Timeline dot */}
+                        <span className="absolute -left-[24px] top-1.5 w-3.5 h-3.5 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 border-2 border-slate-900 shadow-glow" />
+                        
+                        <div className="glass-card p-4 hover:border-indigo-500/40 transition-all duration-200">
+                          <div className="flex justify-between items-start gap-2 mb-1">
+                            <h4 className="font-semibold text-sm text-slate-200">
+                              {log.vehicle_make} {log.vehicle_model}
+                            </h4>
+                            <span className="text-xs text-indigo-400 font-bold">
+                              ${log.total_price.toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center text-xs text-slate-400 mt-2">
+                            <span>Qty: {log.quantity}</span>
+                            <span>{new Date(log.created_at).toLocaleDateString()}</span>
+                          </div>
+                          {isAdmin && (
+                            <div className="mt-2 pt-2 border-t border-slate-800/50 flex justify-between items-center text-[10px] text-slate-500 font-medium">
+                              <span>User: {log.username}</span>
+                              <span className="text-indigo-500/80 bg-indigo-500/10 px-1.5 py-0.5 rounded">Admin View</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )
+              ) : (
+                myEnquiriesLoading ? (
+                  [...Array(3)].map((_, i) => (
+                    <div key={i} className="flex gap-4 animate-pulse">
+                      <div className="w-8 h-8 rounded-full bg-slate-800" />
+                      <div className="flex-1 space-y-2 py-1">
+                        <div className="h-4 bg-slate-800 rounded w-3/4" />
+                        <div className="h-3 bg-slate-800 rounded w-1/2" />
+                      </div>
+                    </div>
+                  ))
+                ) : myEnquiries.length === 0 ? (
+                  <div className="text-center py-20 text-slate-400">
+                    <p className="text-5xl mb-4">✉️</p>
+                    <p className="font-semibold text-slate-300">No enquiries found</p>
+                    <p className="text-xs mt-1">Queries you submit about cars will show up here.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {myEnquiries.map((e) => (
+                      <div
+                        key={e.id}
+                        onClick={() => {
+                          setEnquiryVehicle({
+                            id: e.vehicle_id,
+                            make: e.vehicle_make,
+                            model: e.vehicle_model
+                          })
+                          setShowDrawer(false)
+                        }}
+                        className="glass-card p-4 hover:border-indigo-500/40 hover:scale-[1.01] cursor-pointer transition-all duration-200"
+                      >
+                        <div className="flex justify-between items-start gap-2 mb-2">
+                          <h4 className="font-bold text-sm text-slate-200">
+                            {e.vehicle_id ? `${e.vehicle_make} ${e.vehicle_model}` : 'General Enquiry'}
+                          </h4>
+                          <span className="text-[10px] text-slate-400">
+                            {new Date(e.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                        
+                        <div className="text-xs text-slate-300 bg-slate-950/20 p-2.5 rounded-lg border border-slate-800/40 leading-relaxed mb-3">
+                          <strong className="text-slate-400 block mb-0.5 text-[10px]">Initial Enquiry:</strong>
+                          {e.message}
+                        </div>
+
+                        <div className="text-[10px] text-indigo-400 font-semibold bg-indigo-500/10 px-2.5 py-1 rounded border border-indigo-500/20 w-fit flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 inline-block animate-pulse" />
+                          Open 2-Way Chat Room
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )
               )}
             </div>
           </div>
         </div>
+      )}
+      {/* Floating Chat Support Widget */}
+      {!isAdmin && (
+        <button
+          id="floating-support-chat-btn"
+          onClick={() => setShowSupportChat(true)}
+          className="fixed bottom-6 right-6 z-40 bg-indigo-600 hover:bg-indigo-700 text-white font-bold p-4 rounded-full shadow-2xl hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2 border border-indigo-500/35"
+          title="Open Live Chat Support"
+        >
+          <span className="text-xl">💬</span>
+          <span className="text-xs uppercase tracking-wider font-semibold">Live Support</span>
+        </button>
       )}
     </div>
   )

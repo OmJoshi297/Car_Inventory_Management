@@ -64,4 +64,15 @@ export const customersAPI = {
   delete: (id) => client.delete(`/customers/${id}`),
 }
 
+// ─── Enquiries ────────────────────────────────────────────────────────────────
+
+export const enquiriesAPI = {
+  create: (data) => client.post('/enquiries', data),
+  list: () => client.get('/enquiries'),
+  listMy: () => client.get('/enquiries/my'),
+  getMessages: (id) => client.get(`/enquiries/${id}/messages`),
+  sendMessage: (id, messageText) => client.post(`/enquiries/${id}/messages`, { message: messageText }),
+  delete: (id) => client.delete(`/enquiries/${id}`),
+}
+
 export default client

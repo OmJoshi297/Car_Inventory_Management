@@ -170,3 +170,39 @@ class ActivityLogOut(BaseModel):
 class VehicleTrends(BaseModel):
     most_selling: List[VehicleOut]
     on_sale: List[VehicleOut]
+
+
+class EnquiryCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    email: EmailStr
+    message: str = Field(..., min_length=1, max_length=1000)
+    vehicle_id: Optional[int] = None
+
+
+class EnquiryOut(BaseModel):
+    id: int
+    user_id: Optional[int] = None
+    vehicle_id: Optional[int] = None
+    vehicle_make: Optional[str] = None
+    vehicle_model: Optional[str] = None
+    name: str
+    email: str
+    message: str
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class EnquiryMessageCreate(BaseModel):
+    message: str = Field(..., min_length=1, max_length=1000)
+
+
+class EnquiryMessageOut(BaseModel):
+    id: int
+    enquiry_id: int
+    sender_name: str
+    message: str
+    is_from_admin: bool
+    created_at: datetime
+
+    model_config = {"from_attributes": True}

@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.database import Base, SessionLocal, engine
 from app.auth import hash_password
 from app.models import User
-from app.routers import auth, inventory, vehicles, customers
+from app.routers import auth, inventory, vehicles, customers, enquiries
 
 from sqlalchemy import text
 
@@ -27,7 +27,7 @@ def run_migrations():
         if "sale_price" not in columns:
             db.execute(text("ALTER TABLE vehicles ADD COLUMN sale_price FLOAT"))
             print("🔧 Added column 'sale_price' to 'vehicles' table")
-            
+
         db.commit()
     except Exception as e:
         db.rollback()
@@ -84,6 +84,7 @@ app.include_router(auth.router)
 app.include_router(vehicles.router)
 app.include_router(inventory.router)
 app.include_router(customers.router)
+app.include_router(enquiries.router)
 
 
 @app.get("/", tags=["Health"])

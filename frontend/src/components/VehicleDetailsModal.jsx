@@ -11,7 +11,7 @@ const CAR_PLACEHOLDER_IMAGES = {
   Pickup:      'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=1000&q=80',
 }
 
-export default function VehicleDetailsModal({ vehicle, onClose, onPurchase, onEdit, onDelete, onRestock, isAdmin, purchasing }) {
+export default function VehicleDetailsModal({ vehicle, onClose, onPurchase, onEdit, onDelete, onRestock, isAdmin, purchasing, onEnquire }) {
   if (!vehicle) return null
 
   const {

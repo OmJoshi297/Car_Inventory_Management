@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
-import { vehiclesAPI, inventoryAPI, customersAPI } from '../api/client'
+import { vehiclesAPI, inventoryAPI, customersAPI, enquiriesAPI } from '../api/client'
 import VehicleForm from '../components/VehicleForm'
 
 export default function AdminPanel() {
@@ -19,6 +19,16 @@ export default function AdminPanel() {
   const [customers, setCustomers] = useState([])
   const [customersLoading, setCustomersLoading] = useState(false)
   const [deleteCustomerConfirm, setDeleteCustomerConfirm] = useState(null)
+
+  const [enquiries, setEnquiries] = useState([])
+  const [enquiriesLoading, setEnquiriesLoading] = useState(false)
+  const [deleteEnquiryConfirm, setDeleteEnquiryConfirm] = useState(null)
+  
+  const [activeEnquiry, setActiveEnquiry] = useState(null)
+  const [activeEnquiryMessages, setActiveEnquiryMessages] = useState([])
+  const [activeEnquiryMessagesLoading, setActiveEnquiryMessagesLoading] = useState(false)
+  const [adminMessageText, setAdminMessageText] = useState('')
+  const [adminSendLoading, setAdminSendLoading] = useState(false)
 
   const fetchLogs = async () => {
     setLogsLoading(true)
@@ -44,9 +54,22 @@ export default function AdminPanel() {
     }
   }
 
+  const fetchEnquiries = async () => {
+    setEnquiriesLoading(true)
+    try {
+      const { data } = await enquiriesAPI.list()
+      setEnquiries(data)
+    } catch {
+      toast.error('Failed to load enquiries')
+    } finally {
+      setEnquiriesLoading(false)
+    }
+  }
+
   useEffect(() => {
     vehiclesAPI.list().then(({ data }) => setVehicles(data)).catch(() => toast.error('Failed to load')).finally(() => setLoading(false))
     inventoryAPI.getPurchasesLogs().then(({ data }) => setLogs(data)).catch(() => {})
+    enquiriesAPI.list().then(({ data }) => setEnquiries(data)).catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -56,6 +79,8 @@ export default function AdminPanel() {
       vehiclesAPI.list().then(({ data }) => setVehicles(data)).catch(() => {})
     } else if (activeTab === 'customers') {
       fetchCustomers()
+    } else if (activeTab === 'enquiries') {
+      fetchEnquiries()
     }
   }, [activeTab])
 
@@ -106,6 +131,52 @@ export default function AdminPanel() {
       setDeleteCustomerConfirm(null)
     }
   }
+
+  const handleDeleteEnquiry = async () => {
+    if (!deleteEnquiryConfirm) return
+    try {
+      await enquiriesAPI.delete(deleteEnquiryConfirm.id)
+      setEnquiries((prev) => prev.filter((e) => e.id !== deleteEnquiryConfirm.id))
+      toast.success('Enquiry deleted successfully ✅')
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to delete enquiry')
+    } finally {
+      setDeleteEnquiryConfirm(null)
+    }
+  }
+
+  const handleAdminSendMessage = async (e) => {
+    e?.preventDefault()
+    if (!activeEnquiry || !adminMessageText.trim()) return
+
+    setAdminSendLoading(true)
+    try {
+      const { data } = await enquiriesAPI.sendMessage(activeEnquiry.id, adminMessageText)
+      setActiveEnquiryMessages((prev) => [...prev, data])
+      setAdminMessageText('')
+    } catch {
+      toast.error('Failed to send response')
+    } finally {
+      setAdminSendLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!activeEnquiry || activeTab !== 'enquiries') return
+
+    const fetchActiveMsgs = async () => {
+      try {
+        const { data } = await enquiriesAPI.getMessages(activeEnquiry.id)
+        setActiveEnquiryMessages(data)
+      } catch (err) {
+        console.error('Failed to fetch messages for admin:', err)
+      }
+    }
+
+    fetchActiveMsgs()
+    const interval = setInterval(fetchActiveMsgs, 3000)
+    return () => clearInterval(interval)
+  }, [activeEnquiry, activeTab])
 
   const handleRestock = async () => {
     try {
@@ -203,6 +274,20 @@ export default function AdminPanel() {
           >
             👥 Customer Management
             {activeTab === 'customers' && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500 rounded-full" />
+            )}
+          </button>
+          <button
+            id="tab-enquiries"
+            onClick={() => setActiveTab('enquiries')}
+            className={`pb-3 text-sm font-semibold transition-all relative flex items-center gap-2 ${
+              activeTab === 'enquiries'
+                ? 'text-indigo-400'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            ✉️ Enquiries ({enquiries.length})
+            {activeTab === 'enquiries' && (
               <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500 rounded-full" />
             )}
           </button>
@@ -434,6 +519,163 @@ export default function AdminPanel() {
               </table>
             </div>
           )}
+
+          {activeTab === 'enquiries' && (
+            <div className="flex h-[550px] border border-slate-800/80 rounded-xl overflow-hidden bg-slate-900/30 backdrop-blur-md">
+              {/* Left pane: Threads list */}
+              <div className="w-1/3 border-r border-slate-800 flex flex-col bg-slate-950/20">
+                <div className="p-4 border-b border-slate-800 bg-slate-900/50">
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Active Chat Threads</h4>
+                </div>
+                <div className="flex-1 overflow-y-auto divide-y divide-slate-800/40">
+                  {enquiriesLoading ? (
+                    [...Array(3)].map((_, i) => (
+                      <div key={i} className="p-4 space-y-2 animate-pulse">
+                        <div className="h-4 bg-slate-800 rounded w-2/3" />
+                        <div className="h-3 bg-slate-800 rounded w-1/2" />
+                      </div>
+                    ))
+                  ) : enquiries.length === 0 ? (
+                    <div className="p-8 text-center text-slate-500 text-xs">No active enquiries found.</div>
+                  ) : (
+                    enquiries.map((e) => {
+                      const isActive = activeEnquiry?.id === e.id
+                      return (
+                        <div
+                          key={e.id}
+                          onClick={() => setActiveEnquiry(e)}
+                          className={`p-4 cursor-pointer transition-colors relative flex justify-between items-start gap-2 ${
+                            isActive ? 'bg-indigo-500/10 border-l-2 border-indigo-500' : 'hover:bg-slate-800/40'
+                          }`}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-center gap-1 mb-1">
+                              <p className="font-semibold text-xs text-slate-200 truncate">{e.name}</p>
+                              <span className="text-[9px] text-slate-500 shrink-0">
+                                {new Date(e.created_at).toLocaleDateString()}
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-indigo-400 font-medium truncate mb-1">
+                              Support Chat Thread
+                            </p>
+                            <p className="text-[10px] text-slate-400 truncate leading-relaxed">
+                              {e.message}
+                            </p>
+                          </div>
+                          <button
+                            id={`admin-delete-enquiry-${e.id}`}
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              setDeleteEnquiryConfirm(e)
+                            }}
+                            className="text-slate-500 hover:text-red-400 p-1 rounded transition-colors hover:bg-red-500/10 shrink-0"
+                            title="Delete Chat Thread"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      )
+                    })
+                  )}
+                </div>
+              </div>
+
+              {/* Right pane: Chat Area */}
+              <div className="w-2/3 flex flex-col bg-slate-900/10 justify-between overflow-hidden">
+                {activeEnquiry ? (
+                  <>
+                    {/* Active Thread Header */}
+                    <div className="p-4 border-b border-slate-800 bg-slate-900/50 flex justify-between items-center">
+                      <div>
+                        <h4 className="font-bold text-sm text-slate-200">
+                          Chatting with {activeEnquiry.name}
+                        </h4>
+                        <p className="text-[10px] text-slate-400 mt-0.5">
+                          Email: {activeEnquiry.email} | Support Chatroom
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setActiveEnquiry(null)}
+                        className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded transition-colors"
+                      >
+                        Close Chat
+                      </button>
+                    </div>
+
+                    {/* Messages History */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-950/15">
+                      {activeEnquiryMessagesLoading && activeEnquiryMessages.length === 0 ? (
+                        <div className="flex justify-center items-center h-full">
+                          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-indigo-500" />
+                        </div>
+                      ) : activeEnquiryMessages.length === 0 ? (
+                        <div className="text-center py-20 text-slate-500 text-xs">
+                          Loading conversation logs...
+                        </div>
+                      ) : (
+                        activeEnquiryMessages.map((msg) => {
+                          const isMe = msg.is_from_admin
+                          return (
+                            <div
+                              key={msg.id}
+                              className={`flex flex-col max-w-[80%] ${
+                                isMe ? 'ml-auto items-end' : 'mr-auto items-start'
+                              }`}
+                            >
+                              <span className="text-[9px] text-slate-400 mb-0.5 px-1">
+                                {isMe ? '🛡️ You (Admin)' : msg.sender_name}
+                              </span>
+                              <div
+                                className={`p-3 rounded-2xl text-xs leading-relaxed ${
+                                  isMe
+                                    ? 'bg-indigo-600 text-white rounded-tr-none shadow-glow'
+                                    : 'bg-slate-800 text-slate-200 rounded-tl-none'
+                                }`}
+                              >
+                                {msg.message}
+                              </div>
+                              <span className="text-[8px] text-slate-500 mt-0.5 px-1">
+                                {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                          )
+                        })
+                      )}
+                    </div>
+
+                    {/* Input Footer */}
+                    <form onSubmit={handleAdminSendMessage} className="p-3 border-t border-slate-800 bg-slate-950/30 flex gap-2">
+                      <input
+                        type="text"
+                        value={adminMessageText}
+                        onChange={(e) => setAdminMessageText(e.target.value)}
+                        className="form-input text-xs flex-1 rounded-xl py-2 px-3 bg-slate-950/50 border-slate-800 text-slate-200 placeholder-slate-500 focus:border-indigo-500"
+                        placeholder="Type a response to reply..."
+                        disabled={adminSendLoading}
+                        required
+                      />
+                      <button
+                        id="admin-send-chat-btn"
+                        type="submit"
+                        className="btn-primary px-4 py-2 text-xs rounded-xl font-bold flex items-center justify-center shrink-0"
+                        disabled={adminSendLoading || !adminMessageText.trim()}
+                      >
+                        Send
+                      </button>
+                    </form>
+                  </>
+                ) : (
+                  <div className="flex-1 flex flex-col justify-center items-center text-slate-500 text-xs p-8 text-center">
+                    <p className="text-4xl mb-3">💬</p>
+                    <p className="font-semibold text-slate-400">No Chat Selected</p>
+                    <p className="mt-1 max-w-xs text-[11px]">
+                      Select an enquiry thread from the active chat threads list on the left to start a real-time 2-way conversation.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -513,6 +755,30 @@ export default function AdminPanel() {
                 className="btn-danger flex-1 py-2 font-semibold"
               >
                 Delete Account
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Enquiry Confirmation Modal */}
+      {deleteEnquiryConfirm && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="glass-card w-full max-w-sm p-6 animate-slide-up">
+            <h3 className="text-lg font-bold text-white mb-1">🗑️ Delete Enquiry</h3>
+            <p className="text-slate-400 text-sm mb-6">
+              Are you sure you want to permanently delete this enquiry from <strong>{deleteEnquiryConfirm.name}</strong>? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setDeleteEnquiryConfirm(null)} className="btn-secondary flex-1">
+                Cancel
+              </button>
+              <button
+                id="admin-confirm-delete-enquiry"
+                onClick={handleDeleteEnquiry}
+                className="btn-danger flex-1 py-2 font-semibold"
+              >
+                Delete Enquiry
               </button>
             </div>
           </div>

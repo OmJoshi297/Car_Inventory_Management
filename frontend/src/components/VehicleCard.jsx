@@ -22,7 +22,7 @@ const CAR_PLACEHOLDER_IMAGES = {
   Pickup:      'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=600&q=80',
 }
 
-export default function VehicleCard({ vehicle, onPurchase, onEdit, onDelete, onRestock, onViewDetails, isAdmin, purchasing }) {
+export default function VehicleCard({ vehicle, onPurchase, onEdit, onDelete, onRestock, onViewDetails, isAdmin, purchasing, onEnquire }) {
   const {
     id, make, model, year, category, price, quantity,
     color, mileage, image_url, image_urls,
@@ -179,12 +179,16 @@ export default function VehicleCard({ vehicle, onPurchase, onEdit, onDelete, onR
             <button
               id={`purchase-btn-${id}`}
               data-testid="purchase-btn"
-              disabled={isOutOfStock || purchasing}
               onClick={(e) => {
                 e.stopPropagation()
                 onPurchase(id)
               }}
-              className="btn-primary w-full text-sm py-2.5"
+              disabled={purchasing || isOutOfStock}
+              className={`w-full text-sm py-2.5 font-bold transition-all duration-200 ${
+                isOutOfStock
+                  ? 'bg-slate-800 text-slate-500 border border-slate-700/50 cursor-not-allowed'
+                  : 'btn-primary'
+              }`}
             >
               {purchasing ? (
                 <span className="flex items-center justify-center gap-2">

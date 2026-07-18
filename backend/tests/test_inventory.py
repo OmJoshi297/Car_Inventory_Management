@@ -278,3 +278,114 @@ class TestCustomerManagement:
         resp = client.delete(f"/api/customers/{customer_b.id}", headers=headers)
         assert resp.status_code == 403
 
+
+class TestEnquiryManagement:
+    def test_create_enquiry_guest(self, client, db):
+        """Guests (unauthenticated users) can create enquiries."""
+        payload = {
+            "name": "Jane Doe",
+            "email": "jane@example.com",
+            "message": "Is anyone available for support?"
+        }
+        resp = client.post("/api/enquiries", json=payload)
+        assert resp.status_code == 201
+        data = resp.json()
+        assert data["name"] == "Jane Doe"
+        assert data["email"] == "jane@example.com"
+        assert data["message"] == "Is anyone available for support?"
+
+    def test_create_enquiry_authenticated(self, client, db):
+        """Logged in users can submit enquiries."""
+        user = create_user(db, username="customer_a", email="customer_a@example.com")
+        headers = auth_headers(client, username="customer_a", password="password123")
+        payload = {
+            "name": "Customer User",
+            "email": "customer_a@example.com",
+            "message": "Can I get some support help?"
+        }
+        resp = client.post("/api/enquiries", json=payload, headers=headers)
+        assert resp.status_code == 201
+        data = resp.json()
+        assert data["user_id"] == user.id
+
+    def test_admin_can_list_and_delete_enquiries(self, client, db):
+        """Admin can get all enquiries and delete them."""
+        # Create enquiry
+        payload = {
+            "name": "Jane Doe",
+            "email": "jane@example.com",
+            "message": "Hello!"
+        }
+        client.post("/api/enquiries", json=payload)
+
+        # Non-admin tries to list - should fail
+        resp_fail = client.get("/api/enquiries")
+        assert resp_fail.status_code in (401, 403)
+
+        # Admin lists
+        create_user(db, username="admin_user", email="admin@example.com", is_admin=True)
+        headers = auth_headers(client, username="admin_user", password="password123")
+        resp = client.get("/api/enquiries", headers=headers)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert len(data) == 1
+        enquiry_id = data[0]["id"]
+
+        # Admin deletes
+        resp_del = client.delete(f"/api/enquiries/{enquiry_id}", headers=headers)
+        assert resp_del.status_code == 204
+
+        # Verify deletion
+        resp_list = client.get("/api/enquiries", headers=headers)
+        assert len(resp_list.json()) == 0
+
+    def test_admin_can_reply_to_enquiry(self, client, db):
+        """Admin should be able to reply to enquiries by posting messages."""
+        # Create enquiry
+        payload = {
+            "name": "Jane Doe",
+            "email": "jane@example.com",
+            "message": "Hello!"
+        }
+        resp = client.post("/api/enquiries", json=payload)
+        enquiry_id = resp.json()["id"]
+
+        # Admin replies
+        create_user(db, username="admin_user", email="admin@example.com", is_admin=True)
+        headers = auth_headers(client, username="admin_user", password="password123")
+        reply_payload = {"message": "Yes, we can help you with that!"}
+        resp_reply = client.post(f"/api/enquiries/{enquiry_id}/messages", json=reply_payload, headers=headers)
+        assert resp_reply.status_code == 201
+        data = resp_reply.json()
+        assert data["message"] == "Yes, we can help you with that!"
+        assert data["is_from_admin"] is True
+
+        # Fetch messages history
+        resp_msgs = client.get(f"/api/enquiries/{enquiry_id}/messages", headers=headers)
+        assert resp_msgs.status_code == 200
+        msgs = resp_msgs.json()
+        assert len(msgs) == 2  # Initial message + admin reply
+        assert msgs[0]["message"] == "Hello!"
+        assert msgs[1]["message"] == "Yes, we can help you with that!"
+
+    def test_customer_can_list_own_enquiries(self, client, db):
+        """Customers can fetch only their own enquiries."""
+        customer_a = create_user(db, username="customer_a", email="customer_a@example.com")
+        customer_b = create_user(db, username="customer_b", email="customer_b@example.com")
+
+        # Customer A enquiry
+        headers_a = auth_headers(client, username="customer_a", password="password123")
+        client.post("/api/enquiries", json={"name": "A", "email": "customer_a@example.com", "message": "Query A"}, headers=headers_a)
+
+        # Customer B enquiry
+        headers_b = auth_headers(client, username="customer_b", password="password123")
+        client.post("/api/enquiries", json={"name": "B", "email": "customer_b@example.com", "message": "Query B"}, headers=headers_b)
+
+        # Fetch own list
+        resp_a = client.get("/api/enquiries/my", headers=headers_a)
+        assert resp_a.status_code == 200
+        data_a = resp_a.json()
+        assert len(data_a) == 1
+        assert data_a[0]["message"] == "Query A"
+
+
