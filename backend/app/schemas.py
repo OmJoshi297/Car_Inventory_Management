@@ -50,14 +50,25 @@ class VehicleCreate(BaseModel):
     image_urls: Optional[List[str]] = Field(default=None, description="List of photo URLs")
     color: Optional[str] = None
     mileage: int = Field(default=0, ge=0)
+    is_on_sale: bool = Field(default=False)
+    sale_price: Optional[float] = Field(default=None, gt=0)
 
     @model_validator(mode="after")
-    def sync_primary_image(self):
-        """Ensure image_url is always set to the first image_urls entry."""
+    def sync_and_validate_sale(self):
+        """Ensure image_url is set, and validate sale price constraints."""
         if self.image_urls and len(self.image_urls) > 0:
             self.image_url = self.image_urls[0]
         elif self.image_url and not self.image_urls:
             self.image_urls = [self.image_url]
+            
+        if self.is_on_sale:
+            if self.sale_price is None:
+                raise ValueError("Sale price is required when marked on sale.")
+            if self.sale_price >= self.price:
+                raise ValueError("Sale price must be less than the original price.")
+        else:
+            self.sale_price = None
+            
         return self
 
 
@@ -73,13 +84,22 @@ class VehicleUpdate(BaseModel):
     image_urls: Optional[List[str]] = None
     color: Optional[str] = None
     mileage: Optional[int] = Field(default=None, ge=0)
+    is_on_sale: Optional[bool] = None
+    sale_price: Optional[float] = Field(default=None, gt=0)
 
     @model_validator(mode="after")
-    def sync_primary_image(self):
+    def sync_and_validate_sale(self):
         if self.image_urls and len(self.image_urls) > 0:
             self.image_url = self.image_urls[0]
         elif self.image_url and not self.image_urls:
             self.image_urls = [self.image_url]
+            
+        if self.is_on_sale:
+            if self.sale_price is not None and self.price is not None and self.sale_price >= self.price:
+                raise ValueError("Sale price must be less than the original price.")
+        elif self.is_on_sale is False:
+            self.sale_price = None
+            
         return self
 
 
@@ -96,6 +116,8 @@ class VehicleOut(BaseModel):
     image_urls: Optional[List[str]] = None
     color: Optional[str]
     mileage: int
+    is_on_sale: bool
+    sale_price: Optional[float]
     created_at: datetime
     updated_at: datetime
 
@@ -143,3 +165,8 @@ class ActivityLogOut(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class VehicleTrends(BaseModel):
+    most_selling: List[VehicleOut]
+    on_sale: List[VehicleOut]

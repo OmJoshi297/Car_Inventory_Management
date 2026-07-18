@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { vehiclesAPI, inventoryAPI } from '../api/client'
 import { useAuth } from '../context/AuthContext'
@@ -8,7 +9,8 @@ import VehicleForm from '../components/VehicleForm'
 import VehicleDetailsModal from '../components/VehicleDetailsModal'
 
 export default function Dashboard() {
-  const { isAdmin } = useAuth()
+  const { isAuthenticated, isAdmin } = useAuth()
+  const navigate = useNavigate()
   const [vehicles, setVehicles] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchActive, setSearchActive] = useState(false)
@@ -75,6 +77,11 @@ export default function Dashboard() {
   }, [fetchAll])
 
   const handlePurchase = async (id) => {
+    if (!isAuthenticated) {
+      toast.error('Please log in to purchase vehicles.')
+      navigate('/login')
+      return
+    }
     setPurchasing((p) => ({ ...p, [id]: true }))
     try {
       const { data } = await inventoryAPI.purchase(id)
@@ -196,13 +203,15 @@ export default function Dashboard() {
               {loading ? 'Loading...' : `${vehicles.length} vehicle${vehicles.length !== 1 ? 's' : ''} found`}
             </h2>
             <div className="flex items-center gap-3">
-              <button
-                id="view-logs-btn"
-                onClick={toggleDrawer}
-                className="btn-secondary text-sm py-2.5 px-4 flex items-center gap-2 border border-slate-700 hover:border-indigo-500"
-              >
-                📜 Purchase History
-              </button>
+              {isAuthenticated && (
+                <button
+                  id="view-logs-btn"
+                  onClick={toggleDrawer}
+                  className="btn-secondary text-sm py-2.5 px-4 flex items-center gap-2 border border-slate-700 hover:border-indigo-500"
+                >
+                  📜 Purchase History
+                </button>
+              )}
               {isAdmin && (
                 <button
                   id="add-vehicle-btn"

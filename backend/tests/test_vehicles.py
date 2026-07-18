@@ -94,6 +94,16 @@ class TestListVehicles:
         for field in required_fields:
             assert field in vehicle, f"Missing field: {field}"
 
+    def test_list_vehicles_unauthenticated_returns_200(self, client, db):
+        """GET /api/vehicles without credentials should succeed (public endpoint)."""
+        create_vehicle(db, make="Toyota", model="Camry")
+        resp = client.get("/api/vehicles")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert len(data) == 1
+        assert data[0]["make"] == "Toyota"
+
+
 
 class TestSearchVehicles:
     def test_search_by_make(self, client, db):
@@ -174,6 +184,16 @@ class TestSearchVehicles:
         resp = client.get("/api/vehicles/search?make=toyota", headers=headers)
         assert resp.status_code == 200
         assert len(resp.json()) == 1
+
+    def test_search_unauthenticated_returns_200(self, client, db):
+        """GET /api/vehicles/search without credentials should succeed (public endpoint)."""
+        create_vehicle(db, make="Toyota", model="Camry")
+        resp = client.get("/api/vehicles/search?make=Toyota")
+        assert resp.status_code == 200
+        results = resp.json()
+        assert len(results) == 1
+        assert results[0]["make"] == "Toyota"
+
 
 
 class TestUpdateVehicle:

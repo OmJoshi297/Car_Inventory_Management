@@ -38,6 +38,9 @@ def purchase_vehicle(
 
     vehicle.quantity -= payload.quantity
 
+    # Calculate appropriate price
+    price_to_use = vehicle.sale_price if (vehicle.is_on_sale and vehicle.sale_price is not None) else vehicle.price
+
     # Log the purchase
     log_entry = ActivityLog(
         user_id=current_user.id,
@@ -46,7 +49,7 @@ def purchase_vehicle(
         vehicle_make=vehicle.make,
         vehicle_model=vehicle.model,
         quantity=payload.quantity,
-        total_price=vehicle.price * payload.quantity
+        total_price=price_to_use * payload.quantity
     )
     db.add(log_entry)
 

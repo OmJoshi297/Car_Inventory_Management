@@ -106,13 +106,13 @@ class TestLogin:
 class TestTokenProtection:
     def test_unauthenticated_request_to_protected_endpoint_returns_403(self, client):
         """Requests to protected endpoints without a token should be rejected."""
-        resp = client.get("/api/vehicles")
+        resp = client.get("/api/vehicles/purchases/logs")
         assert resp.status_code in (401, 403)
 
     def test_invalid_token_returns_401(self, client):
         """An invalid/tampered token should be rejected."""
         resp = client.get(
-            "/api/vehicles",
+            "/api/vehicles/purchases/logs",
             headers={"Authorization": "Bearer totally-invalid-token"},
         )
         assert resp.status_code == 401
@@ -121,5 +121,5 @@ class TestTokenProtection:
         """A valid token should grant access to protected endpoints."""
         create_user(db)
         headers = auth_headers(client)
-        resp = client.get("/api/vehicles", headers=headers)
+        resp = client.get("/api/vehicles/purchases/logs", headers=headers)
         assert resp.status_code == 200

@@ -43,12 +43,10 @@ export default function Navbar() {
           </Link>
 
           {/* Nav Links */}
-          {isAuthenticated && (
-            <div className="hidden md:flex items-center gap-1">
-              {navLink('/', 'Inventory')}
-              {isAdmin && navLink('/admin', 'Admin Panel')}
-            </div>
-          )}
+          <div className="hidden md:flex items-center gap-1">
+            {navLink('/', 'Inventory')}
+            {isAuthenticated && isAdmin && navLink('/admin', 'Admin Panel')}
+          </div>
 
           {/* Right section */}
           <div className="flex items-center gap-3">

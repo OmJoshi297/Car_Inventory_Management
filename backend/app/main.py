@@ -6,8 +6,38 @@ from app.auth import hash_password
 from app.models import User
 from app.routers import auth, inventory, vehicles
 
+from sqlalchemy import text
+
 # Create all database tables on startup
 Base.metadata.create_all(bind=engine)
+
+
+def run_migrations():
+    """Add is_on_sale and sale_price columns to vehicles table if they don't exist."""
+    db = SessionLocal()
+    try:
+        # Check existing columns
+        cursor = db.execute(text("PRAGMA table_info(vehicles)"))
+        columns = [row[1] for row in cursor.fetchall()]
+        
+        if "is_on_sale" not in columns:
+            db.execute(text("ALTER TABLE vehicles ADD COLUMN is_on_sale BOOLEAN DEFAULT 0 NOT NULL"))
+            print("🔧 Added column 'is_on_sale' to 'vehicles' table")
+            
+        if "sale_price" not in columns:
+            db.execute(text("ALTER TABLE vehicles ADD COLUMN sale_price FLOAT"))
+            print("🔧 Added column 'sale_price' to 'vehicles' table")
+            
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        print(f"⚠️ Error running migrations: {e}")
+    finally:
+        db.close()
+
+
+run_migrations()
+
 
 
 def seed_admin():
